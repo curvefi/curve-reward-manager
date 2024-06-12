@@ -1,0 +1,10 @@
+.vscode
+.venv
+.env
+venv
+__pycache__
+build/
+reports/
+.build
+notes.txt
+deploy_log.md
