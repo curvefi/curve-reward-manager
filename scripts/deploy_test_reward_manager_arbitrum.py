@@ -12,7 +12,7 @@ from datetime import datetime
 # some constants from .env if needed
 # COLLECTOR_ADDRESS = os.getenv('COLLECTOR_ADDRESS')
 
-REWARD_MANAGER = os.getenv('REWARD_MANAGER')
+REWARD_MANAGERS = os.getenv('REWARD_MANAGERS')
 RECOVERY_ADDRESS = os.getenv('RECOVERY_ADDRESS')
 REWARD_TOKEN = os.getenv('REWARD_TOKEN')
 
@@ -29,9 +29,9 @@ def cli():
 @account_option()
 def deploy_testnet(network, account):
 
-    test_gauge = account.deploy(project.TestGauge, REWARD_TOKEN_TESTNET, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="2 gwei", gas_limit="100000")
+    test_gauge = account.deploy(project.TestGauge, REWARD_TOKEN_TESTNET, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="100000")
 
-    deploy = account.deploy(project.RewardManager, REWARD_MANAGER, REWARD_TOKEN_TESTNET, [test_gauge], max_priority_fee="1000 wei", max_fee="2 gwei", gas_limit="100000")
+    deploy = account.deploy(project.RewardManager, REWARD_MANAGERS, REWARD_TOKEN_TESTNET, [test_gauge], max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="100000")
 
 
 @cli.command(cls=NetworkBoundCommand)
@@ -39,12 +39,15 @@ def deploy_testnet(network, account):
 def deploy(network, account):
 
     test_gauge = account.deploy(project.TestGauge, REWARD_TOKEN, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="2 gwei", gas_limit="100000")
-
+    # test_gauge = ""
     gauges = GAUGE_ALLOWLIST.split(",")
     gauges.append(test_gauge)
     print(gauges)
+    managers = REWARD_MANAGERS.split(",")
 
-    deploy = account.deploy(project.RewardManager, REWARD_MANAGER, REWARD_TOKEN, gauges, max_priority_fee="1000 wei", max_fee="2 gwei", gas_limit="100000")
+    print(managers)
+
+    deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="200000")
 
 
 @cli.command(cls=NetworkBoundCommand)
