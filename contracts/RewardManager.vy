@@ -11,25 +11,25 @@ from vyper.interfaces import ERC20
 interface Gauge:
     def deposit_reward_token(_reward_token: address, _amount: uint256): nonpayable
 
-manager: public(address)
+managers: public(DynArray[address, 3])
 reward_token: public(address)
 reward_receivers: public(DynArray[address, 10])
 
 # set epoch length for newer gauges
 @external
-def __init__(_manager: address, _reward_token: address, _reward_receivers: DynArray[address, 10]):
+def __init__(_managers: DynArray[address, 3], _reward_token: address, _reward_receivers: DynArray[address, 10]):
     """
     @notice Contract constructor
     @param _reward_receivers allowed gauges to receiver reward
     """
-    self.manager = _manager
+    self.managers = _managers
     self.reward_token = _reward_token
     self.reward_receivers = _reward_receivers
 
 @external
 def deposit_reward_token(_reward_receiver: address, _amount: uint256):
     
-    assert msg.sender == self.manager, 'dev: only reward manager can call this function'
+    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
 
     assert _reward_receiver in self.reward_receivers
     # deposit reward token from sender to this contract

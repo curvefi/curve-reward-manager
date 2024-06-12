@@ -12,5 +12,6 @@ def bob(accounts):
 
 @pytest.fixture(scope="session")
 # recovery address
+# backup manager address
 def charlie(accounts):
     return accounts[2]

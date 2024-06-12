@@ -18,9 +18,9 @@ def test_gauge(project, alice, charlie, reward_token):
     return gauge
 
 @pytest.fixture(scope="module")
-def reward_manager(project, alice, bob, reward_token, test_gauge):
+def reward_manager(project, alice, bob, charlie, reward_token, test_gauge):
     # bob manager address
-    reward_manager_contract = alice.deploy(project.RewardManager, bob, reward_token, [test_gauge] )
+    reward_manager_contract = alice.deploy(project.RewardManager, [bob, charlie], reward_token, [test_gauge] )
     reward_token.approve(reward_manager_contract, 10 ** 19, sender=bob) 
     print(reward_manager_contract)
     return reward_manager_contract
