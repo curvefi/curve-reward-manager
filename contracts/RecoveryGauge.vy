@@ -1,6 +1,6 @@
 # @version 0.3.10
 """
-@title TestGauge
+@title RecoveryGauge
 @author martinkrung for curve.fi
 @license MIT
 @notice test gauge for testing and to recover token
