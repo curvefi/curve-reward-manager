@@ -44,7 +44,7 @@ graph TD
         D1 -->|"deposit_reward_token(gauge, amount)"| D2
         D2 -->|"forwards ARB from Manager" | E1[RecoveryGauge] 
         D2 -->|"forwards ARB from Manager" | R1[Gauge0/1/2]
-        D1 -->|"deposit_reward_token_from_here(gauge, amount)"| D2
+        D1 -->|"deposit_reward_token_from_contract(gauge, amount)"| D2
         D2 -->| sends ARB from RewardManager| E1
         D2 -->| sends ARB from RewardManager| R1 
         R1 -->| ARB used as reward| Z1[staked lp]
