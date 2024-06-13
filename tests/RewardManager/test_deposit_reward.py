@@ -32,7 +32,7 @@ def test_reward_manager_from_contract(alice, bob, charlie, reward_token, recover
     reward_token.transferFrom(bob, reward_manager, amount, sender=bob)
     reward_manager_balance = reward_token.balanceOf(reward_manager, sender=alice)
     assert reward_manager_balance == amount
-    reward_manager.deposit_reward_token_from_contract(recovery_gauge, amount, sender=bob)
+    reward_manager.deposit_reward_token_from_here(recovery_gauge, amount, sender=bob)
     assert recovery_gauge.recover_token(sender=alice)
     balance_recoverd = reward_token.balanceOf(charlie, sender=alice)
     assert amount == balance_recoverd

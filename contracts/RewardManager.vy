@@ -44,7 +44,7 @@ def deposit_reward_token(_reward_receiver: address, _amount: uint256):
     Gauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
 
 @external
-def deposit_reward_token_from_contract(_reward_receiver: address, _amount: uint256):
+def deposit_reward_token_from_here(_reward_receiver: address, _amount: uint256):
     """
     @notice forward reward token from contract to gauge
     @param _reward_receiver gauges to receiver reward
