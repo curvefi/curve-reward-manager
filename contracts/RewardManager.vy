@@ -12,7 +12,6 @@ interface Gauge:
     def deposit_reward_token(_reward_token: address, _amount: uint256): nonpayable
 
 managers: public(DynArray[address, 3])
-depositors: public(DynArray[address, 3])
 reward_token: public(address)
 reward_receivers: public(DynArray[address, 10])
 
