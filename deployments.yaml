@@ -1,0 +1,10 @@
+arbitrum:mainnet:
+  campaign-1: 
+    name: leveraged-lending-markets
+    date: 20214-06-14
+    RewardManager:
+      address: '0xa7808B10367E6a88a8334a51De9bfE5aF4C0B7D5'
+      explorer: https://arbiscan.io/address/0xa7808B10367E6a88a8334a51De9bfE5aF4C0B7D5#code
+    RecoveryGauge: 
+      address: '0x2e1A7B17e270EFA94Ac94E00aCE5B0625768c4D4'
+      explorer: https://arbiscan.io/address/0x2e1A7B17e270EFA94Ac94E00aCE5B0625768c4D4#code
