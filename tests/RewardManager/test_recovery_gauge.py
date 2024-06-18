@@ -9,6 +9,10 @@ def test_recovery_gauge_reward_token(recovery_gauge, reward_token):
 def test_recovery_gauge_recovery_address(charlie, recovery_gauge):
     assert recovery_gauge.recovery_address() == charlie
 
+def test_recovery_gauge_reward_data(alice, bob, charlie, recovery_gauge, reward_token):
+    reward_data = recovery_gauge.reward_data(reward_token)
+    assert reward_data.rate == 2343173790311650
+
 def test_recovery_gauge_deposit_reward_token(bob, recovery_gauge, reward_token):
     balance = reward_token.balanceOf(bob)
     assert reward_token.approve(recovery_gauge, balance, sender=bob)

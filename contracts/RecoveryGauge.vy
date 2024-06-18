@@ -11,6 +11,17 @@ from vyper.interfaces import ERC20
 reward_token: public(address)
 recovery_address: public(address)
 
+
+struct Reward:
+    distributor: address
+    period_finish: uint256
+    rate: uint256
+    last_update: uint256
+    integral: uint256
+
+reward_data: public(HashMap[address, Reward])
+
+
 @external
 def __init__(_reward_token: address,_recovery_address: address):
     """
@@ -20,6 +31,14 @@ def __init__(_reward_token: address,_recovery_address: address):
     """
     self.reward_token = _reward_token
     self.recovery_address = _recovery_address
+
+    self.reward_data[_reward_token] = Reward({
+        distributor: msg.sender,
+        period_finish: 1719000000, # Friday, June 21, 2024 8:00:00 PM
+        rate: 2343173790311650,
+        last_update: 1718389499,
+        integral: 5945129356764
+    })
 
 @external
 def deposit_reward_token(_reward_token: address, _amount: uint256):
