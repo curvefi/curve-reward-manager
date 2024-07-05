@@ -55,8 +55,27 @@ graph TD
     end
 ```
 
+## on-chain reward data
+
+
+https://arbiscan.io/address/0xbe543fc11b6eb4ae1a80cb4e06828f06dc3791da#readContract#F27
+
+arg(0)/token: 0x912ce59144191c1204e64559fe8253a0e49e6548
+```
+struct Reward:
+    distributor: address
+    period_finish: uint256 # unix time stamp
+    rate: uint256  # in sec
+    last_update: uint256
+    integral: uint256
+```
+Example response:
+
+0xa7808B10367E6a88a8334a51De9bfE5aF4C0B7D5,1718970092,1475152797113262,1718578595,7054314588242
 
 
 ## Origin
 
-Based on https://github.com/curvefi/curve-dao-contracts/blob/master/contracts/streamers/RewardStream.vy
+Code based on https://github.com/curvefi/curve-dao-contracts/blob/master/contracts/streamers/RewardStream.vy
+
+

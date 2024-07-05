@@ -21,6 +21,7 @@ struct Reward:
 
 reward_data: public(HashMap[address, Reward])
 
+supply: public(uint256)
 
 @external
 def __init__(_reward_token: address,_recovery_address: address):
@@ -34,11 +35,15 @@ def __init__(_reward_token: address,_recovery_address: address):
 
     self.reward_data[_reward_token] = Reward({
         distributor: msg.sender,
-        period_finish: 1719000000, # Friday, June 21, 2024 8:00:00 PM
-        rate: 2343173790311650,
+        period_finish: block.timestamp + 86400, # 1 day in the future
+        # 1719000000, # Friday, June 21, 2024 8:00:00 PM
+        rate: 2343173790311650, # token per second
         last_update: 1718389499,
         integral: 5945129356764
     })
+    # mock data for total supply
+    # crvUSD * 1000
+    self.supply = 397157 * 10**18 * 1000
 
 @external
 def deposit_reward_token(_reward_token: address, _amount: uint256):
@@ -64,3 +69,8 @@ def recover_token()->bool:
         return True
     else:
         return False
+
+@view
+@external
+def totalSupply()->uint256:
+    return self.supply

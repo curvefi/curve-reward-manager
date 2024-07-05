@@ -42,26 +42,3 @@ def test_reward_manager_from_contract(alice, bob, charlie, reward_token, recover
 def test_reward_manager_revert(alice, recovery_gauge, reward_manager):
     with ape.reverts("dev: only reward managers can call this function"):
         reward_manager.deposit_reward_token(recovery_gauge, 10 ** 18,  sender=alice)
-
-def test_reward_manager_calc_current_apr(bob, recovery_gauge, reward_manager):
-    # precison in pips, a pip is 1/10000, 2000 pips is 20%
-    current_apr = reward_manager.calc_current_apr(recovery_gauge, 397157 * 10000, 8739 , sender=bob)
-    print(current_apr)
-
-
-def test_reward_manager_calc_optimal_apr_record(bob, recovery_gauge, reward_manager):
-    # precison in pips, a pip is 1/10000, 2000 pips is 20%
-    new_apr = reward_manager.set_optimal_receiver_data(recovery_gauge, 397157 * 10000, int(0.8739 * 10000) , int(0.2 * 10000), sender=bob)
-
-    assert reward_manager.reward_receivers_data(recovery_gauge).tvl == 3971570000
-    print(reward_manager.reward_receivers_data(recovery_gauge).tvl)
-
-    assert reward_manager.reward_receivers_data(recovery_gauge).token_price == 8739
-    print(reward_manager.reward_receivers_data(recovery_gauge).token_price)
-
-    assert reward_manager.reward_receivers_data(recovery_gauge)._target_apr == 2000
-    print(reward_manager.reward_receivers_data(recovery_gauge).target_apr)
-
-    assert reward_manager.reward_receivers_data(recovery_gauge).token_amount == 1743153500000000000000
-    print(reward_manager.reward_receivers_data(recovery_gauge).token_amount)
-

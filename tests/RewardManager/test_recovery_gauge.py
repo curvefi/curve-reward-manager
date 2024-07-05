@@ -13,6 +13,11 @@ def test_recovery_gauge_reward_data(alice, bob, charlie, recovery_gauge, reward_
     reward_data = recovery_gauge.reward_data(reward_token)
     assert reward_data.rate == 2343173790311650
 
+def test_recovery_gauge_supply(recovery_gauge):
+    supply = recovery_gauge.totalSupply()
+    assert supply == recovery_gauge.supply()
+    assert supply == 397157000000000000000000000
+
 def test_recovery_gauge_deposit_reward_token(bob, recovery_gauge, reward_token):
     balance = reward_token.balanceOf(bob)
     assert reward_token.approve(recovery_gauge, balance, sender=bob)

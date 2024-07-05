@@ -30,8 +30,13 @@ def cli():
 def deploy_testnet(network, account):
 
     recovery_gauge = account.deploy(project.RecoveryGauge, REWARD_TOKEN_TESTNET, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="100000")
+    gauges = GAUGE_ALLOWLIST.split(",")
+    gauges.append(recovery_gauge)
+    print(gauges)
+    managers = REWARD_MANAGERS.split(",")
+    print(managers)
 
-    deploy = account.deploy(project.RewardManager, REWARD_MANAGERS, REWARD_TOKEN_TESTNET, [recovery_gauge], max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="100000")
+    deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN_TESTNET, gauges, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="200000")
 
 
 @cli.command(cls=NetworkBoundCommand)
@@ -44,10 +49,9 @@ def deploy(network, account):
     gauges.append(recovery_gauge)
     print(gauges)
     managers = REWARD_MANAGERS.split(",")
-
     print(managers)
 
-    deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="200000")
+    deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="250000")
 
 
 @cli.command(cls=NetworkBoundCommand)
