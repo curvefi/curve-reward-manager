@@ -60,3 +60,15 @@ graph TD
 ## Origin
 
 Based on https://github.com/curvefi/curve-dao-contracts/blob/master/contracts/streamers/RewardStream.vy
+
+
+## Install
+
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install eth-ape'[recommended-plugins]'
+ape plugins install arbitrum
+ape test
+```
