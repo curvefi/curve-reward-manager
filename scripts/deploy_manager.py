@@ -8,6 +8,7 @@ from ape.cli import ConnectedProviderCommand, account_option
 REWARD_MANAGERS = os.getenv('REWARD_MANAGERS')
 REWARD_TOKEN = os.getenv('REWARD_TOKEN')
 RECOVERY_ADDRESS = os.getenv('RECOVERY_ADDRESS')
+EXISTING_RECOVERY_GAUGE = os.getenv('EXISTING_RECOVERY_GAUGE')
 
 REWARD_TOKEN_TESTNET = os.getenv('REWARD_TOKEN_TESTNET')
 GAUGE_ALLOWLIST = os.getenv('GAUGE_ALLOWLIST')
@@ -30,9 +31,11 @@ def info(ecosystem, provider, account, network):
 @account_option()
 def deploy(network, provider, account):
 
-    recovery_gauge = account.deploy(project.RecoveryGauge, REWARD_TOKEN, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
+    if EXISTING_RECOVERY_GAUGE is None:
+        recovery_gauge = account.deploy(project.RecoveryGauge, REWARD_TOKEN, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
+    else:
+        recovery_gauge = EXISTING_RECOVERY_GAUGE
 
-    # recovery_gauge = ""
     gauges = GAUGE_ALLOWLIST.split(",")
     gauges.append(recovery_gauge)
     click.echo(gauges)
