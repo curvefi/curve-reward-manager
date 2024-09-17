@@ -32,7 +32,7 @@ interface RewardManager:
 
 managers: public(DynArray[address, 3])
 reward_token: public(address)
-reward_receivers: public(DynArray[address, 10])
+reward_receivers: public(DynArray[address, 20])
 
 apr: public(uint256)
 
@@ -47,7 +47,7 @@ reward_receivers_data: public(HashMap[address, RewardRecieverData])
 
 # set epoch length for newer gauges
 @external
-def __init__(_managers: DynArray[address, 3], _reward_token: address, _reward_receivers: DynArray[address, 10]):
+def __init__(_managers: DynArray[address, 3], _reward_token: address, _reward_receivers: DynArray[address, 20]):
     """
     @notice Contract constructor
     @param _managers set managers who can deposit reward token

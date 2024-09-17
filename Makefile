@@ -5,18 +5,20 @@ start_env:
 	source .env
 	source .venv/bin/activate
 
+deploy_info:
+	ape run scripts/deploy_manager.py info --network arbitrum:mainnet-fork:foundry
 
 deploy_local:
-	ape run scripts/deploy_test_reward_manager_arbitrum.py deploy --network arbitrum:mainnet-fork:foundry
+	ape run scripts/deploy_manager.py deploy --network arbitrum:mainnet-fork:foundry
 
 deploy_arbitrum_sepolia:
-	ape run scripts/deploy_test_reward_manager_arbitrum.py deploy-testnet --network arbitrum:sepolia:infura
+	ape run scripts/deploy_manager.py deploy --network arbitrum:sepolia:infura
 
 deploy_arbitrum:
-	ape run scripts/deploy_test_reward_manager_arbitrum.py deploy --network arbitrum:mainnet:infura
+	ape run scripts/deploy_manager.py deploy --network arbitrum:mainnet:infura
 
 import_pvk:
-	ape accounts import arbdeploy
+	ape accounts import arbideploy
 
 networks_list:
 	ape networks list
