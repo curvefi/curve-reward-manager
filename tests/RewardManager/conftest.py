@@ -21,5 +21,6 @@ def reward_manager(project, alice, bob, charlie, reward_token, recovery_gauge):
     # bob manager address
     reward_manager_contract = alice.deploy(project.RewardManager, [bob, charlie], reward_token, [recovery_gauge] )
     reward_token.approve(reward_manager_contract, 10 ** 19, sender=bob) 
+    reward_manager_contract.setMockCalcStorage(recovery_gauge, sender=bob)
     #print(reward_manager_contract)
     return reward_manager_contract

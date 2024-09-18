@@ -31,8 +31,8 @@ def info(ecosystem, provider, account, network):
 @account_option()
 def deploy(network, provider, account):
 
-    if EXISTING_RECOVERY_GAUGE is None:
-        recovery_gauge = account.deploy(project.RecoveryGauge, REWARD_TOKEN, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
+    if EXISTING_RECOVERY_GAUGE == "0x0000000000000000000000000000000000000000":
+        recovery_gauge = account.deploy(project.RecoveryGauge, REWARD_TOKEN, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="200000")
     else:
         recovery_gauge = EXISTING_RECOVERY_GAUGE
 
@@ -42,7 +42,7 @@ def deploy(network, provider, account):
     managers = REWARD_MANAGERS.split(",")
     click.echo(managers)
 
-    deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="400000")
+    deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="4000000")
 
 cli.add_command(info)
 cli.add_command(deploy)

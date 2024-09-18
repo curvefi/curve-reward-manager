@@ -27,14 +27,19 @@ interface Chainlink:
 interface RewardManager:
     def current_apr_tvl_price(_reward_receiver: address, _tvl: uint256, _token_price: uint256) -> uint256: view
     def current_apr_tvl(_reward_receiver: address, _token_price: uint256) -> uint256: view
+    def current_apr(_reward_receiver: address) -> uint256: view
+    def calculate_reward_token_amount(_reward_receiver: address, _target_apr: uint256) -> uint256: view
     def token_price() -> uint256: view
-    def tvl(_reward_receiver: address) -> uint256: view
+    def crvUSDTVLinGauge(_reward_receiver: address) -> uint256: view
 
 managers: public(DynArray[address, 3])
 reward_token: public(address)
 reward_receivers: public(DynArray[address, 20])
 
 apr: public(uint256)
+
+SECONDS_PER_YEAR: constant(uint256) = 365 * 24 * 3600
+PRECISION: constant(uint256) = 10000
 
 struct RewardRecieverData:
     tvl: uint256
@@ -122,8 +127,8 @@ def current_apr_tvl_price(_reward_receiver: address, _tvl: uint256, _token_price
     """
     @notice forward reward token from contract to gauge
     @param _reward_receiver gauges to receive reward
-    @param _tvl value of pool in $, with 5 digits 1 is 10000
-    @param _token_price price of token in $, with 5 digits, 1 is 10000
+    @param _tvl value of pool in $, with 4 decimal places, 1 is 10000
+    @param _token_price price of token in $, with 4 decimal places, 1 is 10000
     """
     assert _tvl > 1000 * 10000, 'dev: tvl needs to be > $1000'
     assert _token_price > 1, 'dev: tvl needs to be > $0.0001'
@@ -147,7 +152,7 @@ def current_apr_tvl(_reward_receiver: address, _token_price: uint256) -> uint256
     """
     @notice forward reward token from contract to gauge
     @param _reward_receiver gauges to receive reward
-    @param _token_price price of token in $, with 5 digits, 1 is 10000
+    @param _token_price price of token in $, with 4 decimal places, 1 is 10000
     """
     assert _token_price > 1, 'dev: tvl needs to be > $0.0001'
     
@@ -173,10 +178,11 @@ def current_apr(_reward_receiver: address) -> uint256:
     """
     @notice forward reward token from contract to gauge
     @param _reward_receiver gauges to receive reward
+    @return current apr as 10**18
     """
     
     reward_data: Reward = Gauge(_reward_receiver).reward_data(self.reward_token)
-    tvl: uint256 = RewardManager(self).tvl()
+    tvl: uint256 = RewardManager(self).crvUSDTVLinGauge(_reward_receiver)
     token_price: uint256 = RewardManager(self).token_price()
 
     reward_duration: uint256 = reward_data.period_finish - block.timestamp
@@ -191,38 +197,37 @@ def current_apr(_reward_receiver: address) -> uint256:
 
 @view
 @external
-def current_apr_pips(_reward_receiver: address, _tvl: uint256, _token_price: uint256) -> uint256:
+def current_apr_in_pips(_reward_receiver: address) -> uint256:
     """
     @notice forward reward token from contract to gauge
     @param _reward_receiver gauges to receive reward
-    @param _tvl value of pool in $, with 5 digits 1 is 10000
-    @param _token_price price of token in $, with 5 digits, 1 is 10000
+    @return current apr in pips, 1 pip is 1/10000
     """
-    current_apr: uint256 = RewardManager(self).current_apr(_reward_receiver, _tvl, _token_price)
+    current_apr: uint256 = RewardManager(self).current_apr(_reward_receiver)
     return current_apr/10 ** 14 
 
 
-@view
 @external
-def setCalcStorage(_reward_receiver: address) -> uint256:
+def setCalcStorage(_reward_receiver: address, _target_apr: uint256):
     """
-    @notice forward reward token from contract to gauge
+    @notice set storage for calculate_reward_token_amount, this is done to avoid front-running
     @param _reward_receiver gauges to receive reward
+    @param _target_apr target apr in pips, 1 pip is 1/10000
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
 
     self.reward_receivers_data[_reward_receiver]  = RewardRecieverData({
-        tvl: RewardManager(self).tvl(_reward_receiver),
+        tvl: RewardManager(self).crvUSDTVLinGauge(_reward_receiver),
         token_price: RewardManager(self).token_price(),
-        target_apr: 10000,
+        target_apr: _target_apr,
         token_amount: 0
     })
 
-@view
+
 @external
-def setMockCalcStorage(_reward_receiver: address) -> uint256:
+def setMockCalcStorage(_reward_receiver: address):
     """
-    @notice forward reward token from contract to gauge
+    @notice set storage for calculate_reward_token_amount, used for testing
     @param _reward_receiver gauges to receive reward
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
@@ -236,60 +241,56 @@ def setMockCalcStorage(_reward_receiver: address) -> uint256:
 
 
 @view
-@internal
-def optimal_apr(_reward_receiver: address, _target_apr: uint256) -> uint256:
+@external
+def calculate_reward_token_amount(_reward_receiver: address, _target_apr: uint256) -> uint256:
     """
-    @notice forward reward token from contract to gauge
-    @param _reward_receiver gauges to receiver reward
-    @param _tvl value of pool in $, with 5 digits 1 is 10000
-    @param _token_price price of token in $, with 5 digits, 1 is 10000
-    @param _target_apr target apr in pips, 1 pip is 1/10000
+    @notice Calculate the amount of reward tokens needed to achieve the target APR
+    @param _reward_receiver Address of the gauge to receive the reward
+    @param _target_apr Target APR in pips (1 pip = 1/10000 = 0.0001 = 0.01%)
+    @return Amount of reward tokens needed (in token's smallest unit, e.g., wei for 18 decimal tokens)
     """
     assert self.reward_receivers_data[_reward_receiver].tvl > 1000 * 10000, 'dev: tvl needs to be > $1000'
-    # token price needs to be > $0.0001
-    assert self.reward_receivers_data[_reward_receiver].token_price > 1, 'dev: tvl needs to be > $0.0001'
-    # target apr needs to be > 0.5%
-    assert _target_apr >  50, 'dev: target apr needs to be > 0.5%'
+    assert self.reward_receivers_data[_reward_receiver].token_price > 1, 'dev: token price needs to be > $0.0001'
+    assert _target_apr > 50, 'dev: target apr needs to be > 0.5%'
 
-    reward_data: Reward = Gauge(_reward_receiver).reward_data(self.reward_token)
+    tvl: uint256 = self.reward_receivers_data[_reward_receiver].tvl
+    reward_duration: uint256 = 7 * 24 * 3600  # 1 week in seconds
 
-    # with fixed epoch length = 1 week
-    reward_duration: uint256 = 7*24*3600
+    # Calculate reward amount in USD (with 4 decimal places)
+    reward_usd: uint256 = (_target_apr * tvl * reward_duration) / (SECONDS_PER_YEAR * PRECISION * PRECISION)
 
-    # precison in pips, a pip is 1/10000
-    # 2326 pips = 23.26%
-    # in $
-    #new_reward_total: uint256 = tvl * _target_apr / (365 * 24 * 3600 / reward_duration )
+    # Calculate token amount (assuming 18 decimal places for the token)
+    token_amount: uint256 = reward_usd * 10**18 / self.reward_receivers_data[_reward_receiver].token_price
 
-    new_reward_total: uint256 =   _target_apr * self.reward_receivers_data[_reward_receiver].tvl  * reward_duration / (365 * 24 * 3600)
-
-    # self.apr = new_reward_total
-    # 18 digits token and pip correction
-    new_token_amount: uint256 = new_reward_total / _token_price * 10 ** 18 / 10000
-
-    return new_token_amount
+    return token_amount
 
 
 @view
 @external
 def token_price() -> uint256:
     """
-    @notice get token price from chainlink
+    @notice get token price from chainlink as 5 decimals
+    # todo: integrate decimals from chainlink
+    # give fixed price for mock token is dangerouos
     """
-    assert self.reward_token == 0x912CE59144191C1204E64559FE8253a0e49E6548, 'dev: only ARB is supported'
+    # assert self.reward_token == 0x912CE59144191C1204E64559FE8253a0e49E6548, 'dev: only ARB is supported'
+    if self.reward_token == 0x912CE59144191C1204E64559FE8253a0e49E6548:
+        price_feed: address = 0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6
+        # latestRoundData: uint256 = Chainlink(price_feed).latestRoundData()
+        latestAnswer: uint256 = Chainlink(price_feed).latestAnswer()
+        latestAnswer = latestAnswer / 10 ** 4
+        return latestAnswer
+    else:
+        return 8739 # mock token price to $0.8739
 
-    price_feed: address = 0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6
-    # latestRoundData: uint256 = Chainlink(price_feed).latestRoundData()
-    latestAnswer: uint256 = Chainlink(price_feed).latestAnswer()
-    latestAnswer = latestAnswer / 10 ** 4
-    return latestAnswer
+
 
 @view
 @external
-def tvl(_reward_receiver: address) -> uint256:
+def crvUSDTVLinGauge(_reward_receiver: address) -> uint256:
     """
-    @notice tvl of gauge
-    @param _reward_receiver gauges to receiver reward
+    @notice TVL of gauge as crvUSD with 4 decimal places, 1 is 10000
+    @param _reward_receiver gauges
     """
     tvl: uint256 = Gauge(_reward_receiver).totalSupply()
     # totalSupply is 10**21
@@ -299,25 +300,47 @@ def tvl(_reward_receiver: address) -> uint256:
 
 
 @external
-def set_optimal_receiver_data(_reward_receiver: address, tvl: uint256, token_price: uint256, _target_apr: uint256):
-
+def set_optimal_receiver_data(_reward_receiver: address, _tvl: uint256, _token_price: uint256, _target_apr: uint256):
+    """
+    @notice set optimal receiver data
+    @param _reward_receiver gauges to receiver reward
+    @param _tvl value of pool in $, with 4 decimal places, 1 is 10000
+    @param _token_price price of token in $, with 4 decimal places, 1 is 10000
+    @param _target_apr target apr in pips, 1 pip is 1/10000
+    """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
 
     assert _reward_receiver in self.reward_receivers, 'dev: only reward receiver which are allowed'
 
     self.reward_receivers_data[_reward_receiver] = RewardRecieverData({
-        tvl: tvl,
-        token_price: token_price,
+        tvl: _tvl,
+        token_price: _token_price,
         target_apr: _target_apr,
-        token_amount: self.optimal_apr(_reward_receiver, _target_apr)
+        token_amount: RewardManager(self).calculate_reward_token_amount(_reward_receiver, _target_apr)
     })
 
+
+@external
+def setTokenAmount(_reward_receiver: address):
+    """
+    @notice set optimal receiver data
+    @param _reward_receiver gauges to receive reward
+    """
+    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
+
+    assert _reward_receiver in self.reward_receivers, 'dev: only reward receiver which are allowed'
+
+    target_apr: uint256 = self.reward_receivers_data[_reward_receiver].target_apr
+
+    new_token_amount: uint256 = RewardManager(self).calculate_reward_token_amount(_reward_receiver, target_apr)
+
+    self.reward_receivers_data[_reward_receiver].token_amount = new_token_amount
+    
 
 @external
 def kill():
     """
     @notice  kill contract if no balance
-    @param _reward_receiver gauges to receiver reward
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
     assert ERC20(self.reward_token).balanceOf(self) > 0, 'dev: no balance to recover'

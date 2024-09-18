@@ -89,3 +89,9 @@ pip install eth-ape'[recommended-plugins]'
 ape plugins install arbitrum
 ape test
 ```
+
+## calculate new reward amount, we do this in 3 steps, tvl shall not change
+
+1. setCalcStorage with desired target APR for gauge (public function?)
+2. setTokenAmount() to store the amount of reward token that should be given out for the target APR (manager function?)
+3. deposit_reward_token_with_target_rate() to deposit the reward token into the gauge (public function?)
