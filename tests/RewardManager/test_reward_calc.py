@@ -38,33 +38,35 @@ def test_reward_manager_current_apr_tvl(bob, recovery_gauge, reward_manager):
 
 def test_calculate_reward_token_amount(bob, recovery_gauge, reward_manager):
     # precison in pips, a pip is 1/10000, 2000 pips is 20%
-    new_apr = reward_manager.set_optimal_receiver_data(recovery_gauge, 397157 * 10000, int(0.8739 * 10000) , int(0.2 * 10000), sender=bob)
+    
+    new_apr = reward_manager.set_force_gauge_data(recovery_gauge, 397157 * 10000, int(0.8739 * 10000) , int(0.2 * 10000), sender=bob)
 
-    assert reward_manager.reward_receivers_data(recovery_gauge).tvl == 3971570000
-    print(reward_manager.reward_receivers_data(recovery_gauge).tvl)
+    assert reward_manager.gauge_data(recovery_gauge).tvl == 3971570000
+    print(reward_manager.gauge_data(recovery_gauge).tvl)
 
-    assert reward_manager.reward_receivers_data(recovery_gauge).token_price == 8739
-    print(reward_manager.reward_receivers_data(recovery_gauge).token_price)
+    assert reward_manager.gauge_data(recovery_gauge).token_price == 8739
+    print(reward_manager.gauge_data(recovery_gauge).token_price)
 
-    assert reward_manager.reward_receivers_data(recovery_gauge).target_apr == 2000
-    print(reward_manager.reward_receivers_data(recovery_gauge).target_apr)
+    assert reward_manager.gauge_data(recovery_gauge).target_apr == 2000
+    print(reward_manager.gauge_data(recovery_gauge).target_apr)
 
-    assert reward_manager.reward_receivers_data(recovery_gauge).token_amount == 174276232978601670
-    print(reward_manager.reward_receivers_data(recovery_gauge).token_amount / 10**18)
+    assert reward_manager.gauge_data(recovery_gauge).token_amount == 174276232978601670
+    print(reward_manager.gauge_data(recovery_gauge).token_amount / 10**18)
 
 
 def test_set_calc_storage(bob, recovery_gauge, reward_manager):
-    # precison in pips, a pip is 1/10000, 2000 pips is 20%
-    new_apr = reward_manager.setCalcStorage(recovery_gauge, int(0.2 * 10000), sender=bob)
+    # precison in pips, a pip is 1/10000, 1000 pips is 10%
+    reward_manager.set_gauge_data(recovery_gauge, int(0.1 * 10000), sender=bob)
 
-    assert reward_manager.reward_receivers_data(recovery_gauge).tvl == 3971570000
-    print(reward_manager.reward_receivers_data(recovery_gauge).tvl)
+    assert reward_manager.gauge_data(recovery_gauge).tvl == 3971570000
+    print(reward_manager.gauge_data(recovery_gauge).tvl)
 
-    assert reward_manager.reward_receivers_data(recovery_gauge).token_price == 8739
-    print(reward_manager.reward_receivers_data(recovery_gauge).token_price)
+    assert reward_manager.gauge_data(recovery_gauge).token_price == 8739
+    print(reward_manager.gauge_data(recovery_gauge).token_price)
 
-    assert reward_manager.reward_receivers_data(recovery_gauge).target_apr == 2000
-    print(reward_manager.reward_receivers_data(recovery_gauge).target_apr)
-
-    assert reward_manager.reward_receivers_data(recovery_gauge).token_amount == 0
-    print(reward_manager.reward_receivers_data(recovery_gauge).token_amount)
+    assert reward_manager.gauge_data(recovery_gauge).target_apr == 1000
+    print(reward_manager.gauge_data(recovery_gauge).target_apr)
+    # precision errors lead to 87080901705000572, and not 174276232978601670 / 2 = 87138116489300835
+    # 0.07% error
+    assert reward_manager.gauge_data(recovery_gauge).token_amount == 87080901705000572  
+    print(reward_manager.gauge_data(recovery_gauge).token_amount)

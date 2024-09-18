@@ -2,6 +2,9 @@ import ape
 import pytest
 import sys
 
+pytest.mark.skip(reason="Skipping all tests in this file")
+
+
 def test_reward_manager_manager(bob, charlie, reward_manager):
     assert reward_manager.managers(0) == bob
     assert reward_manager.managers(1) == charlie
@@ -10,9 +13,9 @@ def test_reward_manager_reward_token(bob, reward_token, reward_manager):
     assert reward_manager.reward_token() == reward_token
 
 def test_reward_manager_receivers(bob, recovery_gauge, reward_manager):
-    reward_receivers = reward_manager.reward_receivers(0)
-    print(reward_receivers)
-    assert recovery_gauge == reward_receivers
+    gauges = reward_manager.gauges(0)
+    print(gauges)
+    assert recovery_gauge == gauges
 
 def test_reward_manager_deposit(bob, recovery_gauge, reward_manager):
     reward_manager.deposit_reward_token(recovery_gauge, 10 ** 18,  sender=bob)

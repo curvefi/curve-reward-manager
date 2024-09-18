@@ -90,8 +90,11 @@ ape plugins install arbitrum
 ape test
 ```
 
-## calculate new reward amount, we do this in 3 steps, tvl shall not change
+## calculate new reward amount, then send to needed reward token to gauge
 
-1. setCalcStorage with desired target APR for gauge (public function?)
-2. setTokenAmount() to store the amount of reward token that should be given out for the target APR (manager function?)
-3. deposit_reward_token_with_target_rate() to deposit the reward token into the gauge (public function?)
+1. set_gauge_data() to store the target APR for a gauge
+2. deposit_reward_token_with_target_rate() to send the reward token to the gauge
+
+or in one step:
+
+deposit_reward_token_with_target_rate_on_step(_gauge: address, _target_apr: uint256):
