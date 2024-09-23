@@ -90,6 +90,14 @@ ape plugins install arbitrum
 ape test
 ```
 
+for on-chain testing:
+
+## Install
+
+```
+pip install titanoboa==0.1.10
+```
+
 ## calculate new reward amount, then send to needed reward token to gauge
 
 1. set_gauge_data() to store the target APR for a gauge

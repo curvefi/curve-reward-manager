@@ -40,8 +40,6 @@ managers: public(DynArray[address, 3])
 reward_token: public(address)
 gauges: public(DynArray[address, 20])
 
-apr: public(uint256)
-
 SECONDS_PER_YEAR: constant(uint256) = 365 * 24 * 3600
 PRECISION: constant(uint256) = 10000
 
@@ -115,7 +113,7 @@ def deposit_reward_token_with_target_rate(_gauge: address):
     reward_data: Reward = Gauge(_gauge).reward_data(self.reward_token)
     reward_duration: uint256 = reward_data.period_finish - block.timestamp
     # only calculate if reward is inactive
-    assert reward_duration == 0, 'dev: rewards needs to be inactive'
+    assert reward_duration == 0, 'dev: rewards needs to inactive'
 
     token_amount: uint256 = self.gauge_data[_gauge].token_amount
 
@@ -153,9 +151,10 @@ def set_gauge_data(_gauge: address, _target_apr: uint256):
         tvl: RewardManager(self).crvUSD_tvl_in_gauge(_gauge),
         token_price: RewardManager(self).token_price(),
         target_apr: _target_apr,
-        token_amount: RewardManager(self).calculate_reward_token_amount(_gauge, _target_apr)
+        token_amount: 0
     })
 
+    self.gauge_data[_gauge].token_amount = RewardManager(self).calculate_reward_token_amount(_gauge, _target_apr)
 
 @external
 def set_mock_gauge_data(_gauge: address):
@@ -190,9 +189,12 @@ def set_force_gauge_data(_gauge: address, _tvl: uint256, _token_price: uint256, 
         tvl: _tvl,
         token_price: _token_price,
         target_apr: _target_apr,
-        token_amount: RewardManager(self).calculate_reward_token_amount(_gauge, _target_apr)
+        token_amount: 0
     })
 
+    self.gauge_data[_gauge].token_amount = RewardManager(self).calculate_reward_token_amount(_gauge, _target_apr)
+
+    
 
 @view
 @external
@@ -360,8 +362,8 @@ def current_apr_tvl_price(_gauge: address, _tvl: uint256, _token_price: uint256)
 @external
 def kill():
     """
-    @notice  kill contract if no balance
+    @notice  kill contract if no balance, selfdestruct is deprecated and dangerous too!
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-    assert ERC20(self.reward_token).balanceOf(self) > 0, 'dev: no balance to recover'
+    assert ERC20(self.reward_token).balanceOf(self) == 0, 'dev: not empty, balance to recover'
     selfdestruct(msg.sender)
