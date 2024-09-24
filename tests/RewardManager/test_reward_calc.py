@@ -1,6 +1,8 @@
 import ape
+from ape import chain
 import pytest
 import sys
+import time
 
 
 def test_reward_manager_current_apr(bob, recovery_gauge, reward_manager):
@@ -70,3 +72,31 @@ def test_set_calc_storage(bob, recovery_gauge, reward_manager):
     # 0.07% error
     assert reward_manager.gauge_data(recovery_gauge).token_amount == 87080901705000572  
     print(reward_manager.gauge_data(recovery_gauge).token_amount)
+
+
+
+"""
+#very hard to test, as it needs real data from on-chain
+def test_calculate_new_apr(alice, bob, charlie, reward_token, recovery_gauge, reward_manager):
+    new_apr = reward_manager.set_force_gauge_data(recovery_gauge, 397157 * 10000, int(0.8739 * 10000) , int(0.2 * 10000), sender=bob)
+    amount = 10 ** 16
+    reward_manager_balance = reward_token.balanceOf(reward_manager, sender=alice)
+    assert reward_manager_balance == 0
+    reward_token.transferFrom(bob, reward_manager, amount, sender=bob)
+    reward_manager_balance = reward_token.balanceOf(reward_manager, sender=alice)
+    assert reward_manager_balance == amount
+    reward_manager.deposit_reward_token_from_contract(recovery_gauge, amount, sender=bob)
+    assert recovery_gauge.recover_token(sender=alice)
+    balance_recoverd = reward_token.balanceOf(charlie, sender=alice)
+    assert amount == balance_recoverd
+    assert amount == reward_manager_balance
+    # Forward the chain to a point in the future, specifically 24 hours (24*3600 seconds)
+    # This is a placeholder for actual code that would advance the blockchain's timestamp
+    # In a real test, this would involve using a testing framework that allows for time manipulation
+    # For example, in ape, you could use `ape.chain.mine()` to advance the block number and timestamp
+    # Here, we'll just simulate this by printing a message indicating what should happen
+    print("Simulating the passage of time by advancing the blockchain's timestamp by 24 hours...")
+    with ape.reverts("dev: reward_duration needs to be > 0"):
+        chain.mine(deltatime=24*3600)
+        reward_manager.calculate_new_min_apr(recovery_gauge)
+"""

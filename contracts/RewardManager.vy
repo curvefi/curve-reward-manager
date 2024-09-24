@@ -35,6 +35,8 @@ interface RewardManager:
     def deposit_reward_token_from_contract(_gauge: address, _amount: uint256): nonpayable
     def deposit_reward_token_with_target_rate(_gauge: address): nonpayable
     def deposit_reward_token_with_target_rate_on_step(_gauge: address, _target_apr: uint256): nonpayable
+    def reward_duration_in_h(_gauge: address)-> uint256: view
+    def calculate_new_min_apr(_gauge: address)-> uint256: view
 
 managers: public(DynArray[address, 3])
 reward_token: public(address)
@@ -42,6 +44,7 @@ gauges: public(DynArray[address, 20])
 
 SECONDS_PER_YEAR: constant(uint256) = 365 * 24 * 3600
 PRECISION: constant(uint256) = 10000
+EPOCH: constant(uint256) = 7 * 24 * 3600
 
 struct GaugeData:
     tvl: uint256
@@ -69,7 +72,6 @@ def __init__(_managers: DynArray[address, 3], _reward_token: address, _gauges: D
 def deposit_reward_token(_gauge: address, _amount: uint256):
     
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
     assert _gauge in self.gauges, 'dev: only gauge which are allowed'
 
     # deposit reward token from sender to this contract
@@ -87,12 +89,25 @@ def deposit_reward_token_from_contract(_gauge: address, _amount: uint256):
     @param _amount amount of reward token to deposit
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
     assert _gauge in self.gauges, 'dev: only gauge which are allowed'
 
     assert ERC20(self.reward_token).approve(_gauge, _amount)
 
     Gauge(_gauge).deposit_reward_token(self.reward_token, _amount)
+
+
+@external
+def deposit_reward_token_to_stretch(_gauge: address):
+    """
+    @notice forward 1 reward token from contract to gauge, to stretch the reward duration
+    @param _gauge gauges to receiver reward
+    """
+    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
+    assert _gauge in self.gauges, 'dev: only gauge which are allowed'
+
+    assert ERC20(self.reward_token).approve(_gauge, 1)
+
+    Gauge(_gauge).deposit_reward_token(self.reward_token, 1)
 
 
 @external
@@ -102,7 +117,6 @@ def deposit_reward_token_with_target_rate(_gauge: address):
     @param _gauge gauge to receiver reward
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
     assert _gauge in self.gauges, 'dev: only gauge which are allowed'
 
     assert self.gauge_data[_gauge].tvl > 0, 'dev: no tvl data'
@@ -134,6 +148,8 @@ def deposit_reward_token_with_target_rate_on_step(_gauge: address, _target_apr: 
     @param _gauge gauges to receive reward
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
+    assert _gauge in self.gauges, 'dev: only gauge which are allowed'
+
     RewardManager(self).set_gauge_data(_gauge, _target_apr)
     RewardManager(self).deposit_reward_token_with_target_rate(_gauge)
 
@@ -146,6 +162,7 @@ def set_gauge_data(_gauge: address, _target_apr: uint256):
     @param _target_apr target apr in pips, 1 pip is 1/10000
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
+    assert _gauge in self.gauges, 'dev: only gauge which are allowed'
 
     self.gauge_data[_gauge]  = GaugeData({
         tvl: RewardManager(self).crvUSD_tvl_in_gauge(_gauge),
@@ -163,6 +180,7 @@ def set_mock_gauge_data(_gauge: address):
     @param _gauge gauges to receive reward
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
+    assert _gauge in self.gauges, 'dev: only gauge which are allowed'
 
     self.gauge_data[_gauge]  = GaugeData({
         tvl: 397157 * 10000,
@@ -182,7 +200,6 @@ def set_force_gauge_data(_gauge: address, _tvl: uint256, _token_price: uint256, 
     @param _target_apr target apr in pips, 1 pip is 1/10000
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
     assert _gauge in self.gauges, 'dev: only gauge which are allowed'
 
     self.gauge_data[_gauge] = GaugeData({
@@ -221,13 +238,49 @@ def calculate_reward_token_amount(_gauge: address, _target_apr: uint256) -> uint
     return token_amount
 
 
+
+@view
+@external
+def calculate_new_min_apr(_gauge: address) -> uint256:
+    """
+    @notice Calculate the new APR based on the available tokens stretched over one epoch.
+    @param _gauge Address of the gauge to receive reward.
+    @return New APR calculated based on the total tokens available for the next epoch as 10**18
+    """
+ 
+    # Read current reward data
+    reward_data: Reward = Gauge(_gauge).reward_data(self.reward_token)
+    reward_duration: uint256 = reward_data.period_finish - block.timestamp
+
+    # only calculate if reward is active
+    assert reward_duration > 0, 'dev: reward_duration needs to be > 0'
+
+    # Get the token price and calculate reward in USD
+    token_price: uint256 = RewardManager(self).token_price()
+    reward_in_usd: uint256 = reward_duration * reward_data.rate * token_price 
+
+    # Calculate new APR
+    tvl: uint256 = RewardManager(self).crvUSD_tvl_in_gauge(_gauge)
+    # not very accurate
+    fraction: uint256 = SECONDS_PER_YEAR/EPOCH
+    new_apr: uint256 = fraction * reward_in_usd/tvl
+
+    return new_apr
+
+
+@view
+@external
+def calculate_new_min_apr_pips(_gauge: address) -> uint256:
+    new_apr: uint256 = RewardManager(self).calculate_new_min_apr(_gauge) 
+    return new_apr/10**14
+
 @view
 @external
 def token_price() -> uint256:
     """
     @notice get token price from chainlink as 5 decimals
     # todo: integrate decimals from chainlink
-    # give fixed price for mock token is dangerouos
+    # give fixed price for mock! token is dangerous
     """
     # assert self.reward_token == 0x912CE59144191C1204E64559FE8253a0e49E6548, 'dev: only ARB is supported'
     if self.reward_token == 0x912CE59144191C1204E64559FE8253a0e49E6548:
@@ -263,7 +316,6 @@ def set_token_amount(_gauge: address):
     @param _gauge gauges to receive reward
     """
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
     assert _gauge in self.gauges, 'dev: only gauge which are allowed'
 
     target_apr: uint256 = self.gauge_data[_gauge].target_apr
@@ -355,8 +407,16 @@ def current_apr_tvl_price(_gauge: address, _tvl: uint256, _token_price: uint256)
     reward_per_year: uint256 = reward_data.rate * SECONDS_PER_YEAR * _token_price 
     # apr as 10**18
     current_apr: uint256 = reward_per_year/_tvl
-
     return current_apr
+
+
+@view
+@external
+def reward_duration_in_h(_gauge: address)-> uint256:
+    reward_data: Reward = Gauge(_gauge).reward_data(self.reward_token)  
+    reward_duration: uint256 = reward_data.period_finish - block.timestamp
+    assert reward_duration > 0, 'dev: reward_duration needs to be > 0'
+    return reward_duration / 3600
 
 
 @external

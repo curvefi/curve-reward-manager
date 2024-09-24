@@ -12,6 +12,10 @@ ARBISCAN_API_KEY = os.getenv('ARBISCAN_API_KEY')
 ETHERSCAN_API_KEY = os.getenv('ETHERSCAN_API_KEY')
 DEPLOYED_REWARDMANAGER = os.getenv('DEPLOYED_REWARDMANAGER')
 GAUGE_TO_TEST = os.getenv('GAUGE_TO_TEST')
+GAUGE_ALLOWLIST = os.getenv('GAUGE_ALLOWLIST')
+REWARD_MANAGERS = os.getenv('REWARD_MANAGERS')
+REWARD_TOKEN = os.getenv('REWARD_TOKEN')
+EXISTING_RECOVERY_GAUGE = os.getenv('EXISTING_RECOVERY_GAUGE')
 
 boa.env.fork(RPC_ARBITRUM)
 
@@ -24,6 +28,34 @@ reward_manager = boa.from_etherscan(
     uri="https://api.arbiscan.io/api",
     api_key=ARBISCAN_API_KEY
 )
+
+#dlcBTC
+
+GAUGE_TO_TEST = "0x2656b01a19a790f07e2b875d69007f88241602f0"
+
+gauges = GAUGE_ALLOWLIST.split(",")
+gauges.append(EXISTING_RECOVERY_GAUGE)
+managers = REWARD_MANAGERS.split(",")
+
+local_reward_manager = boa.load("../contracts/RewardManager.vy", managers, REWARD_TOKEN, gauges)
+
+new_apr = local_reward_manager.calculate_new_min_apr(GAUGE_TO_TEST)
+
+#local_reward_manager = boa.load_partial("../contracts/RewardManager.vy").at(DEPLOYED_REWARDMANAGER)
+
+#new_apr = local_reward_manager.calculate_new_min_apr_pips("0x8d1600015aE09eAaCaEd08531a03ecb8f2bD40fA")
+
+
+
+print(f"new rate: {new_apr}")
+print(f"new rate: {new_apr / 10**18}")
+
+sys.exit()
+
+#with boa.env.prank(CONTROLLER_ADDRESS):
+ #   rate = rate * 365 * 86400
+  #  print(f"rate: {rate}")
+   # print(f"rate: {rate / 10**18}")
 
 
 token_price = reward_manager.token_price()
