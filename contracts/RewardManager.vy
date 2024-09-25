@@ -43,7 +43,8 @@ reward_token: public(address)
 gauges: public(DynArray[address, 20])
 
 SECONDS_PER_YEAR: constant(uint256) = 365 * 24 * 3600
-PRECISION: constant(uint256) = 10000
+PRECISION: constant(uint256) = 10**4
+HIGH_PRECISION: constant(uint256) = 10**10
 EPOCH: constant(uint256) = 7 * 24 * 3600
 
 struct GaugeData:
@@ -69,6 +70,7 @@ def __init__(_managers: DynArray[address, 3], _reward_token: address, _gauges: D
     self.gauges = _gauges
 
 @external
+@nonreentrant('lock')
 def deposit_reward_token(_gauge: address, _amount: uint256):
     
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
@@ -82,6 +84,7 @@ def deposit_reward_token(_gauge: address, _amount: uint256):
     Gauge(_gauge).deposit_reward_token(self.reward_token, _amount)
 
 @external
+@nonreentrant('lock')
 def deposit_reward_token_from_contract(_gauge: address, _amount: uint256):
     """
     @notice forward reward token from contract to gauge
@@ -97,6 +100,7 @@ def deposit_reward_token_from_contract(_gauge: address, _amount: uint256):
 
 
 @external
+@nonreentrant('lock')
 def deposit_reward_token_to_stretch(_gauge: address):
     """
     @notice forward 1 reward token from contract to gauge, to stretch the reward duration
@@ -222,12 +226,12 @@ def calculate_reward_token_amount(_gauge: address, _target_apr: uint256) -> uint
     @param _target_apr Target APR in pips (1 pip = 1/10000 = 0.0001 = 0.01%)
     @return Amount of reward tokens needed (in token's smallest unit, e.g., wei for 18 decimal tokens)
     """
-    assert self.gauge_data[_gauge].tvl > 1000 * 10000, 'dev: tvl needs to be > $1000'
+    assert self.gauge_data[_gauge].tvl > 1000 * PRECISION, 'dev: tvl needs to be > $1000'
     assert self.gauge_data[_gauge].token_price > 1, 'dev: token price needs to be > $0.0001'
     assert _target_apr > 50, 'dev: target apr needs to be > 0.5%'
 
     tvl: uint256 = self.gauge_data[_gauge].tvl
-    reward_duration: uint256 = 7 * 24 * 3600  # 1 week in seconds
+    reward_duration: uint256 = EPOCH  # 1 week in seconds
 
     # Calculate reward amount in USD (with 4 decimal places)
     reward_usd: uint256 = (_target_apr * tvl * reward_duration) / (SECONDS_PER_YEAR * PRECISION * PRECISION)
@@ -261,9 +265,31 @@ def calculate_new_min_apr(_gauge: address) -> uint256:
 
     # Calculate new APR
     tvl: uint256 = RewardManager(self).crvUSD_tvl_in_gauge(_gauge)
-    # not very accurate
-    fraction: uint256 = SECONDS_PER_YEAR/EPOCH
-    new_apr: uint256 = fraction * reward_in_usd/tvl
+    fraction: uint256 = SECONDS_PER_YEAR * HIGH_PRECISION / EPOCH * HIGH_PRECISION
+    new_apr: uint256 = fraction * reward_in_usd / tvl / (HIGH_PRECISION**2) 
+
+    return new_apr
+
+@view
+@external
+def calculate_new_min_apr_simple(_gauge: address) -> uint256:
+    """
+    @notice Calculate the new APR based on the available tokens stretched over one epoch.
+    @param _gauge Address of the gauge to receive reward.
+    @return New APR calculated based on the total tokens available for the next epoch as 10**18
+    """
+ 
+    # Read current reward data
+    reward_data: Reward = Gauge(_gauge).reward_data(self.reward_token)
+    current_apr: uint256 = RewardManager(self).current_apr(_gauge)
+
+    reward_duration: uint256 = reward_data.period_finish - block.timestamp
+
+    # only calculate if reward is active
+    assert reward_duration > 0, 'dev: reward_duration needs to be > 0'
+
+    fraction: uint256 = reward_duration * HIGH_PRECISION / EPOCH * HIGH_PRECISION
+    new_apr: uint256 = current_apr * fraction / (HIGH_PRECISION**2) 
 
     return new_apr
 
