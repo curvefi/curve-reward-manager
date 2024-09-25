@@ -41,14 +41,22 @@ local_reward_manager = boa.load("../contracts/RewardManager.vy", managers, REWAR
 
 new_apr = local_reward_manager.calculate_new_min_apr(GAUGE_TO_TEST)
 
+
+print(f"new rate: {new_apr}")
+print(f"new rate: {new_apr / 10**14}")
+
+new_apr = local_reward_manager.calculate_new_min_apr_simple(GAUGE_TO_TEST)
+
+
+print(f"new rate: {new_apr}")
+print(f"new rate: {new_apr / 10**14} ")
+
 #local_reward_manager = boa.load_partial("../contracts/RewardManager.vy").at(DEPLOYED_REWARDMANAGER)
 
 #new_apr = local_reward_manager.calculate_new_min_apr_pips("0x8d1600015aE09eAaCaEd08531a03ecb8f2bD40fA")
 
 
 
-print(f"new rate: {new_apr}")
-print(f"new rate: {new_apr / 10**18}")
 
 sys.exit()
 
