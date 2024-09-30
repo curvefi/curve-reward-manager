@@ -31,6 +31,8 @@ reward_manager = boa.from_etherscan(
 
 #dlcBTC
 
+# 581
+
 GAUGE_TO_TEST = "0x2656b01a19a790f07e2b875d69007f88241602f0"
 
 gauges = GAUGE_ALLOWLIST.split(",")
@@ -39,13 +41,27 @@ managers = REWARD_MANAGERS.split(",")
 
 local_reward_manager = boa.load("../contracts/RewardManager.vy", managers, REWARD_TOKEN, gauges)
 
+test = local_reward_manager.gauge_exists(GAUGE_TO_TEST)
+print(f"test: {test}")
+
+
 new_apr = local_reward_manager.calculate_new_min_apr(GAUGE_TO_TEST)
 
-
 print(f"new rate: {new_apr}")
-print(f"new rate: {new_apr / 10**14}")
+print(f"new rate: {new_apr / 10**22}")
 
 new_apr = local_reward_manager.calculate_new_min_apr_simple(GAUGE_TO_TEST)
+
+additional_tokens_needed = local_reward_manager.calculate_additional_tokens_needed(GAUGE_TO_TEST, 10000)
+
+print(f"additional_tokens_needed: {additional_tokens_needed}")
+
+
+current_apr = reward_manager.current_apr(GAUGE_TO_TEST)
+current_apr_pips = reward_manager.current_apr_in_pips(GAUGE_TO_TEST)
+
+print(f"current_apr: {current_apr}")
+print(f"new current_apr_pips: {current_apr_pips / 10**14} ")
 
 
 print(f"new rate: {new_apr}")
@@ -58,7 +74,6 @@ print(f"new rate: {new_apr / 10**14} ")
 
 
 
-sys.exit()
 
 #with boa.env.prank(CONTROLLER_ADDRESS):
  #   rate = rate * 365 * 86400
@@ -74,6 +89,7 @@ assert token_price > 0
 crvUSD_tvl_in_gauge = reward_manager.crvUSD_tvl_in_gauge(GAUGE_TO_TEST)
 print(f"CRVUSD TVL in gauge: {crvUSD_tvl_in_gauge}")
 assert crvUSD_tvl_in_gauge > 0  
+sys.exit()
 
 
 # Get managers

@@ -24,6 +24,11 @@ interface Chainlink:
     # def latestRoundData() -> uint256: view
     def latestAnswer() -> uint256: view
 
+
+interface GaugeFactory:
+    def gauge_data(_gauge: address)-> bool: view
+
+
 interface RewardManager:
     def current_apr_tvl_price(_gauge: address, _tvl: uint256, _token_price: uint256) -> uint256: view
     def current_apr_tvl(_gauge: address, _token_price: uint256) -> uint256: view
@@ -215,7 +220,38 @@ def set_force_gauge_data(_gauge: address, _tvl: uint256, _token_price: uint256, 
 
     self.gauge_data[_gauge].token_amount = RewardManager(self).calculate_reward_token_amount(_gauge, _target_apr)
 
-    
+@view
+@external
+def calculate_additional_tokens_needed(_gauge: address, _target_apr: uint256) -> uint256:
+    """
+    @notice Calculate the additional tokens needed to reach the target APR based on the existing reward rate and duration.
+    @param _gauge Address of the gauge to receive the reward.
+    @param _target_apr Target APR in pips (1 pip = 1/10000 = 0.0001 = 0.01%).
+    @return Additional tokens needed to reach the target APR (in token's smallest unit, e.g., wei for 18 decimal tokens).
+    """
+    assert _gauge in self.gauges, 'dev: only gauge which are allowed'
+    assert _target_apr > 0, 'dev: target apr needs to be > 0'
+
+    # Read existing reward data
+    reward_data: Reward = Gauge(_gauge).reward_data(self.reward_token)
+    reward_duration: uint256 = reward_data.period_finish - block.timestamp
+
+    # Calculate the existing reward rate in tokens per second
+    existing_reward_rate: uint256 = reward_data.rate
+
+    # Calculate the target reward rate in tokens per second to reach the target APR
+    tvl: uint256 = RewardManager(self).crvUSD_tvl_in_gauge(_gauge)
+
+    # Adjusted calculation to ensure non-zero values
+    target_reward_rate: uint256 = (_target_apr * tvl * PRECISION * PRECISION) / SECONDS_PER_YEAR
+
+    # Calculate the additional reward rate in tokens per second needed to reach the target APR
+    additional_reward_rate: uint256 = target_reward_rate + reward_data.rate
+
+    # Calculate the additional token amount needed (assuming 18 decimal places for the token)
+    additional_token_amount: uint256 = additional_reward_rate * reward_duration * 10**18
+
+    return additional_token_amount
 
 @view
 @external
@@ -245,13 +281,42 @@ def calculate_reward_token_amount(_gauge: address, _target_apr: uint256) -> uint
 
 @view
 @external
-def calculate_new_min_apr(_gauge: address) -> uint256:
+def calculate_new_min_apr_old(_gauge: address) -> uint256:
     """
     @notice Calculate the new APR based on the available tokens stretched over one epoch.
     @param _gauge Address of the gauge to receive reward.
     @return New APR calculated based on the total tokens available for the next epoch as 10**18
     """
- 
+    # token_price = 6351  in 10**4
+    # rate = 425920239494974 in seconds
+    # Read current reward data
+    # duration = 25219 in seconds
+    # tvl = 1469397192 in 10**4
+    reward_data: Reward = Gauge(_gauge).reward_data(self.reward_token)
+    reward_duration: uint256 = reward_data.period_finish - block.timestamp
+
+    # only calculate if reward is active
+    assert reward_duration > 0, 'dev: reward_duration needs to be > 0'
+
+    # Get the token price and calculate reward in USD
+    token_price: uint256 = RewardManager(self).token_price()
+    reward_in_usd: uint256 = (reward_data.rate  * reward_duration / 10**18) * token_price 
+
+    # Calculate new APR
+    tvl: uint256 = RewardManager(self).crvUSD_tvl_in_gauge(_gauge)
+    fraction: uint256 = SECONDS_PER_YEAR  / reward_duration 
+    new_apr: uint256 = (reward_in_usd / tvl * fraction) * 10**18
+
+    return new_apr
+
+@view
+@external
+def calculate_new_min_apr(_gauge: address) -> uint256:
+    """
+    @notice Calculate the new APR based on the available tokens stretched over one epoch.
+    @param _gauge Address of the gauge to receive reward.
+    @return New APR calculated based on the total tokens available for the next epoch as 10**4
+    """
     # Read current reward data
     reward_data: Reward = Gauge(_gauge).reward_data(self.reward_token)
     reward_duration: uint256 = reward_data.period_finish - block.timestamp
@@ -261,12 +326,18 @@ def calculate_new_min_apr(_gauge: address) -> uint256:
 
     # Get the token price and calculate reward in USD
     token_price: uint256 = RewardManager(self).token_price()
-    reward_in_usd: uint256 = reward_duration * reward_data.rate * token_price 
+    reward_in_usd: uint256 = (reward_data.rate * reward_duration / 10**18) * token_price  # Convert to USD
+
+    # get tvl
+    tvl: uint256 = RewardManager(self).crvUSD_tvl_in_gauge(_gauge)
+
+    # Ensure TVL is greater than zero to avoid division by zero
+    assert tvl > 0, 'dev: tvl must be greater than 0'
 
     # Calculate new APR
-    tvl: uint256 = RewardManager(self).crvUSD_tvl_in_gauge(_gauge)
-    fraction: uint256 = SECONDS_PER_YEAR * HIGH_PRECISION / EPOCH * HIGH_PRECISION
-    new_apr: uint256 = fraction * reward_in_usd / tvl / (HIGH_PRECISION**2) 
+    # fraction = SECONDS_PER_YEAR / reward_duration
+    # new_apr = (reward_in_usd / tvl) * fraction * 10**4
+    new_apr: uint256 = reward_in_usd * 10 ** 1 / tvl * (SECONDS_PER_YEAR / reward_duration)
 
     return new_apr
 
@@ -444,6 +515,16 @@ def reward_duration_in_h(_gauge: address)-> uint256:
     assert reward_duration > 0, 'dev: reward_duration needs to be > 0'
     return reward_duration / 3600
 
+@view
+@external
+def gauge_exists(_gauge: address)-> bool:
+    """
+    @notice check if gauge is a valid gauge, asking the factory
+    @param _gauge gauges to receive reward
+    @return bool
+    """
+    factory: address = 0xabC000d88f23Bb45525E447528DBF656A9D55bf5
+    return GaugeFactory(factory).gauge_data(_gauge)
 
 @external
 def kill():

@@ -106,3 +106,8 @@ pip install titanoboa==0.1.10
 or in one step:
 
 deposit_reward_token_with_target_rate_on_step(_gauge: address, _target_apr: uint256):
+
+
+## ideas
+
+- remove the gauges from the constructor and just test if a gauge exists over the factory. see gauge_exists() (more dynamic, can add gauges over time)
