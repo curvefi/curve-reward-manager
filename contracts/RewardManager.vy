@@ -262,9 +262,9 @@ def calculate_reward_token_amount(_gauge: address, _target_apr: uint256) -> uint
     @param _target_apr Target APR in pips (1 pip = 1/10000 = 0.0001 = 0.01%)
     @return Amount of reward tokens needed (in token's smallest unit, e.g., wei for 18 decimal tokens)
     """
-    assert self.gauge_data[_gauge].tvl > 1000 * PRECISION, 'dev: tvl needs to be > $1000'
+    assert self.gauge_data[_gauge].tvl > 10 * PRECISION, 'dev: tvl needs to be > $10'
     assert self.gauge_data[_gauge].token_price > 1, 'dev: token price needs to be > $0.0001'
-    assert _target_apr > 50, 'dev: target apr needs to be > 0.5%'
+    assert _target_apr > 1, 'dev: target apr needs to be > 0.01%'
 
     tvl: uint256 = self.gauge_data[_gauge].tvl
     reward_duration: uint256 = EPOCH  # 1 week in seconds

@@ -37,7 +37,7 @@ def deploy(network, provider, account):
         recovery_gauge = EXISTING_RECOVERY_GAUGE
 
     gauges = GAUGE_ALLOWLIST.split(",")
-    gauges.append(recovery_gauge)
+    gauges.insert(0, recovery_gauge)
     click.echo(gauges)
     managers = REWARD_MANAGERS.split(",")
     click.echo(managers)
