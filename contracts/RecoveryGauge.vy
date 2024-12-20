@@ -24,8 +24,8 @@ def __init__(_reward_token: address,_recovery_address: address):
 @external
 def deposit_reward_token(_reward_token: address, _amount: uint256):
     """
-    @notice send recoverd token to predefined recovery address
-    @dev _reward_token is not used, it is just to make it compatible with the interface
+    @notice send token from reward manager to this contract
+    @dev _reward_token is not used, it's to make it compatible with the interface
     @param _reward_token reward token address
     @param _amount amount of reward token to deposit
     """
