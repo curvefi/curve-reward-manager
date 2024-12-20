@@ -29,7 +29,28 @@ def __init__(_managers: DynArray[address, 3], _reward_token: address, _reward_re
     self.reward_receivers = _reward_receivers
 
 @external
-def deposit_reward_token(_reward_receiver: address, _amount: uint256):
+def send_reward_token(_reward_receiver: address, _amount: uint256):
+    """
+    @notice send reward token from contract to gauge
+    @param _reward_receiver gauges to receiver reward
+    @param _amount amount of reward token to deposit
+    """
+    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
+
+    assert _reward_receiver in self.reward_receivers, 'dev: only reward receiver which are allowed'
+
+    assert ERC20(self.reward_token).approve(_reward_receiver, _amount)
+
+    Gauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
+
+
+@external
+def deposit_send_reward_token(_reward_receiver: address, _amount: uint256):
+    """
+    @notice deposit reward token from sender to contract, then send to gauge
+    @param _reward_receiver gauges to receiver reward
+    @param _amount amount of reward token to deposit
+    """
     
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
 
@@ -42,17 +63,3 @@ def deposit_reward_token(_reward_receiver: address, _amount: uint256):
 
     Gauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
 
-@external
-def deposit_reward_token_from_contract(_reward_receiver: address, _amount: uint256):
-    """
-    @notice forward reward token from contract to gauge
-    @param _reward_receiver gauges to receiver reward
-    @param _amount amount of reward token to deposit
-    """
-    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
-    assert _reward_receiver in self.reward_receivers, 'dev: only reward receiver which are allowed'
-
-    assert ERC20(self.reward_token).approve(_reward_receiver, _amount)
-
-    Gauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
