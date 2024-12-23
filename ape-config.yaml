@@ -6,7 +6,8 @@ plugins:
   - name: tokens
   - name: etherscan
   - name: arbitrum
-
+  - name: evmchains
+  
 default_ecosystem: ethereum
 
 ethereum:
