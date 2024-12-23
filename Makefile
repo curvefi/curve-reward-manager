@@ -27,4 +27,5 @@ noisy_test:
 	ape test -rP  --capture=no
 
 test:
-	ape test 
+	ape test --network ethereum:local:test
+

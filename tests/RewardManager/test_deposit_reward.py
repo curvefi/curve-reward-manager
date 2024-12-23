@@ -4,6 +4,7 @@ import sys
 
 DAY = 86400
 WEEK = 604800
+
 def test_reward_manager_manager(bob, charlie, reward_manager):
     assert reward_manager.managers(0) == bob
     assert reward_manager.managers(1) == charlie
@@ -16,7 +17,7 @@ def test_reward_manager_receivers(bob, recovery_gauge, reward_manager):
     print(reward_receivers)
     assert recovery_gauge == reward_receivers
 
-def test_reward_manager_deposit(bob, recovery_gauge, reward_manager):
+def test_reward_manager_deposit_simple(bob, recovery_gauge, reward_manager):
     reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18,  sender=bob)
 
 def test_reward_manager_deposit(alice, bob, charlie, reward_token, recovery_gauge, reward_manager):
@@ -53,19 +54,43 @@ def test_reward_manager_send_reward_token_epoch(alice, bob, charlie, reward_toke
     assert amount == balance_recoverd
     assert amount == reward_manager_balance
 
-def test_reward_manager_revert(alice, recovery_gauge, reward_manager):
+def test_reward_manager_epoch_revert_too_short(bob, recovery_gauge, reward_manager):
     with ape.reverts("dev: epoch duration must be between 3 days and a year"):
-        reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18, 53 * WEEK, sender=alice)
+        reward_manager.send_reward_token(recovery_gauge, 10 ** 18, DAY, sender=bob)
 
-def test_reward_manager_revert(alice, recovery_gauge, reward_manager):
+def test_reward_manager_epcho_revert_too_long(bob, recovery_gauge, reward_manager):
     with ape.reverts("dev: epoch duration must be between 3 days and a year"):
-        reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18, 2 * DAY, sender=alice)
+        reward_manager.send_reward_token(recovery_gauge, 10 ** 18, 53 * WEEK, sender=bob)
 
-
-def test_reward_manager_revert(alice, recovery_gauge, reward_manager):
+def test_reward_manager_deposit_revert(alice, recovery_gauge, reward_manager):
     with ape.reverts("dev: only reward managers can call this function"):
         reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18,  sender=alice)
 
-def test_reward_manager_revert(alice, recovery_gauge, reward_manager):
+def test_reward_manager_sent_revert(alice, recovery_gauge, reward_manager):
     with ape.reverts("dev: only reward managers can call this function"):
         reward_manager.send_reward_token(recovery_gauge, 10 ** 18,  sender=alice)
+
+
+def test_recover_lost_token(bob, charlie, diana, lost_token, reward_manager):
+    amount = 10 ** 18
+    lost_token.transferFrom(charlie, reward_manager, amount, sender=charlie)
+    assert lost_token.balanceOf(reward_manager) == amount
+    # rest of lost token on charlies address, start with 10 ** 19
+    assert lost_token.balanceOf(charlie) == 9 * amount
+    # recover lost token to diana (recovery address)
+    reward_manager.recover_lost_token(lost_token, amount, sender=bob)
+    assert lost_token.balanceOf(diana) == amount
+
+def test_recover_lost_token_revert_manager(alice, lost_token, reward_manager):
+    with ape.reverts("dev: only reward managers can call this function"):
+        reward_manager.recover_lost_token(lost_token, 10 ** 18, sender=alice)
+
+def test_recover_lost_token_revert_token(bob, reward_token, reward_manager):
+    with ape.reverts("dev: cannot recover reward token"):
+        reward_manager.recover_lost_token(reward_token, 10 ** 18,  sender=bob)
+
+def test_recover_lost_token_revert_amount(bob, lost_token, reward_manager):
+    with ape.reverts("dev: amount must be greater than 0"):
+        reward_manager.recover_lost_token(lost_token, 0,  sender=bob)
+
+
