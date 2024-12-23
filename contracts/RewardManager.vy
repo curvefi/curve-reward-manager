@@ -52,7 +52,7 @@ def send_reward_token(_reward_receiver: address, _amount: uint256, _epoch: uint2
     assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'dev: epoch duration must be between 3 days and a year'
 
     assert ERC20(self.reward_token).approve(_reward_receiver, _amount)
-    # legacy gauges have no epoch parameter, 
+    # legacy gauges have no epoch parameter 
     # new deposit_reward_token has epoch parameter default to WEEK
     if _epoch == WEEK:
         LegacyGauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
@@ -61,24 +61,31 @@ def send_reward_token(_reward_receiver: address, _amount: uint256, _epoch: uint2
 
 
 @external
-def deposit_send_reward_token(_reward_receiver: address, _amount: uint256):
+def deposit_send_reward_token(_reward_receiver: address, _amount: uint256, _epoch: uint256 = WEEK):
     """
-    @notice deposit reward token from sender to contract, then send to gauge
+    @notice deposit reward token from sender to contract and then forwarded to gauge
     @param _reward_receiver gauges to receiver reward
     @param _amount amount of reward token to deposit
+    @param _epoch The duration the rewards are distributed across in seconds. Between 3 days and a year, week by default
     """
    
     assert msg.sender in self.managers, 'dev: only reward managers can call this function'
 
     assert _reward_receiver in self.reward_receivers, 'dev: only reward receiver which are allowed'
 
+    assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'dev: epoch duration must be between 3 days and a year'
+
     # deposit reward token from sender to this contract
     assert ERC20(self.reward_token).transferFrom(msg.sender, self, _amount)
 
     assert ERC20(self.reward_token).approve(_reward_receiver, _amount)
 
-    LegacyGauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
-
+    # legacy gauges have no epoch parameter
+    # new deposit_reward_token has epoch parameter default to WEEK
+    if _epoch == WEEK:
+        LegacyGauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
+    else:
+        Gauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount, _epoch)
 
 @external
 def recover_lost_token(_lost_token: address, _amount: uint256):

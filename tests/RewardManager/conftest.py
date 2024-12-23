@@ -23,14 +23,16 @@ def lost_token(project, alice, charlie):
 
 
 @pytest.fixture(scope="module")
-def recovery_gauge(project, alice, charlie, reward_token):
-    # charlie is recovery address
-    gauge = alice.deploy(project.RecoveryGauge, reward_token, charlie)
+def recovery_gauge(project, alice, charlie, diana, reward_token):
+    # bob manager address
+    # diana is recovery address
+    gauge = alice.deploy(project.RecoveryGauge, reward_token, diana)
     return gauge
 
 @pytest.fixture(scope="module")
 def reward_manager(project, alice, bob, charlie, diana, reward_token, recovery_gauge):
     # bob manager address
+    # diana is recovery address
     reward_manager_contract = alice.deploy(project.RewardManager, [bob, charlie], reward_token, [recovery_gauge], diana)
     reward_token.approve(reward_manager_contract, 10 ** 19, sender=bob) 
     print(reward_manager_contract)

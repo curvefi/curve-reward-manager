@@ -11,11 +11,12 @@ def bob(accounts):
     return accounts[1]
 
 @pytest.fixture(scope="session")
-# backup manager address
+# charlie is backup manager address
+# charlie is sends wrong token to reward manager
 def charlie(accounts):
     return accounts[2]
 
 @pytest.fixture(scope="session")
-# recovery address
+# diana is recovery address
 def diana(accounts):
     return accounts[3]
