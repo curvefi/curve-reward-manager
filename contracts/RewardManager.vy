@@ -45,13 +45,10 @@ def send_reward_token(_reward_receiver: address, _amount: uint256, _epoch: uint2
     @param _amount The amount of reward token being sent
     @param _epoch The duration the rewards are distributed across in seconds. Between 3 days and a year, week by default
     """
-    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
-    assert _reward_receiver in self.reward_receivers, 'dev: only reward receiver which are allowed'
-
-    assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'dev: epoch duration must be between 3 days and a year'
-
-    assert ERC20(self.reward_token).approve(_reward_receiver, _amount)
+    assert msg.sender in self.managers, 'only reward managers can call this function'
+    assert _reward_receiver in self.reward_receivers, 'only reward receiver which are allowed'
+    assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
+    assert ERC20(self.reward_token).approve(_reward_receiver, _amount, default_return_value=True)
     # legacy gauges have no epoch parameter 
     # new deposit_reward_token has epoch parameter default to WEEK
     if _epoch == WEEK:
@@ -68,17 +65,14 @@ def deposit_send_reward_token(_reward_receiver: address, _amount: uint256, _epoc
     @param _amount amount of reward token to deposit
     @param _epoch The duration the rewards are distributed across in seconds. Between 3 days and a year, week by default
     """
-   
-    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-
-    assert _reward_receiver in self.reward_receivers, 'dev: only reward receiver which are allowed'
-
-    assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'dev: epoch duration must be between 3 days and a year'
+    assert msg.sender in self.managers, 'only reward managers can call this function'
+    assert _reward_receiver in self.reward_receivers, 'only reward receiver which are allowed'
+    assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
 
     # deposit reward token from sender to this contract
-    assert ERC20(self.reward_token).transferFrom(msg.sender, self, _amount)
+    assert ERC20(self.reward_token).transferFrom(msg.sender, self, _amount, default_return_value=True)
 
-    assert ERC20(self.reward_token).approve(_reward_receiver, _amount)
+    assert ERC20(self.reward_token).approve(_reward_receiver, _amount, default_return_value=True)
 
     # legacy gauges have no epoch parameter
     # new deposit_reward_token has epoch parameter default to WEEK
@@ -94,8 +88,8 @@ def recover_lost_token(_lost_token: address, _amount: uint256):
     @param _lost_token address of the token to recover
     @param _amount amount of the token to recover
     """
-    assert msg.sender in self.managers, 'dev: only reward managers can call this function'
-    assert _lost_token != self.reward_token, 'dev: cannot recover reward token'
-    assert _amount > 0, 'dev: amount must be greater than 0'
+    assert msg.sender in self.managers, 'only reward managers can call this function'
+    assert _lost_token != self.reward_token, 'cannot recover reward token'
+    assert _amount > 0, 'amount must be greater than 0'
 
-    assert ERC20(_lost_token).transfer(self.recovery_address, _amount)
+    assert ERC20(_lost_token).transfer(self.recovery_address, _amount, default_return_value=True)
