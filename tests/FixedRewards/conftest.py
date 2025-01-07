@@ -30,10 +30,10 @@ def recovery_gauge(project, alice, charlie, diana, reward_token):
     return gauge
 
 @pytest.fixture(scope="module")
-def fixed_rewards(project, alice):
-    fixed_rewards_contract = alice.deploy(project.FixedRewards )
-    print(fixed_rewards_contract)
-    return fixed_rewards_contract
+def fixed_rewards(project, alice, bob, charlie):
+    # Deploy with bob and charlie as managers
+    contract = alice.deploy(project.FixedRewards, [bob, charlie])
+    return contract
 
 @pytest.fixture(scope="module")
 def reward_manager(project, alice, bob, charlie, diana, reward_token, recovery_gauge, fixed_rewards):

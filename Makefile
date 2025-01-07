@@ -30,7 +30,7 @@ networks_list:
 	ape networks list
 
 noisy_test:
-	ape test -rP  --capture=no
+	ape test -rP  --capture=no --network ethereum:local:test
 
 test:
 	ape test --network ethereum:local:test
