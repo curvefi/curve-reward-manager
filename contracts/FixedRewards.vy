@@ -1,7 +1,8 @@
 # @version 0.3.10
 """
-@title Secure Epoch Distribution with RewardManager
-@author Assistant
+@title RewardManager
+@author martinkrung for curve.fi
+@license MIT
 @notice Distributes rewards through RewardManager based on hardcoded epochs
 """
 
@@ -38,6 +39,8 @@ event RewardDistributed:
     remaining_reward_epochs: uint256
     timestamp: uint256
 
+
+
 @external
 def __init__(_managers: DynArray[address, 3]):
     """
@@ -45,7 +48,7 @@ def __init__(_managers: DynArray[address, 3]):
     @param _managers List of manager addresses that can control the contract
     """
     self.managers = _managers
-    
+     
 
 @external
 def setup(_reward_manager_address: address, _reward_receiver_address: address) -> bool:

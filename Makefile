@@ -11,6 +11,15 @@ deploy_info:
 deploy_local:
 	ape run scripts/deploy_manager.py deploy --network arbitrum:mainnet-fork:foundry
 
+deploy_fixed_rewards_local:
+	ape run scripts/deploy_manager.py deploy-fixed-rewards --network arbitrum:mainnet-fork:foundry
+
+deploy_fixed_rewards_arbitrum_sepolia:
+	ape run scripts/deploy_manager.py deploy-fixed-rewards --network arbitrum:sepolia:infura
+
+get_constructor_abi:
+	python  scripts/get_constructor_abi.py
+
 deploy_arbitrum_sepolia:
 	ape run scripts/deploy_manager.py deploy --network arbitrum:sepolia:infura
 

@@ -26,6 +26,8 @@ def info(ecosystem, provider, account, network):
     click.echo(f"connected: {provider.is_connected}")
     click.echo(f"account: {account}")
 
+cli.add_command(info)
+
 
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
@@ -44,5 +46,18 @@ def deploy(network, provider, account):
 
     deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, RECOVERY_ADDRESS, max_priority_fee="10 wei", max_fee="0.1 gwei", gas_limit="400000")
 
-cli.add_command(info)
 cli.add_command(deploy)
+
+
+@click.command(cls=ConnectedProviderCommand)
+@account_option()
+def deploy_fixed_rewards(network, provider, account):
+
+    managers = REWARD_MANAGERS.split(",")
+    fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="100000", publish=True)
+
+    #fixed_rewards.setup(reward_manager.address, recovery_gauge.address)
+
+    click.echo(fixed_rewards)
+
+cli.add_command(deploy_fixed_rewards)
