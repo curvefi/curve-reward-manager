@@ -85,26 +85,32 @@ def test_reward_manager_deposit_epoch_revert_too_long(bob, recovery_gauge, rewar
     with ape.reverts("epoch duration must be between 3 days and a year"):
         reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18, 53 * WEEK, sender=bob)
 
-def test_recover_lost_token(bob, charlie, diana, lost_token, reward_manager):
+def test_recover_token(bob, charlie, diana, lost_token, reward_manager):
     amount = 10 ** 18
     lost_token.transferFrom(charlie, reward_manager, amount, sender=charlie)
     assert lost_token.balanceOf(reward_manager) == amount
     # rest of lost token on charlies address, start with 10 ** 19
     assert lost_token.balanceOf(charlie) == 9 * amount
     # recover lost token to diana (recovery address)
-    reward_manager.recover_lost_token(lost_token, amount, sender=bob)
+    reward_manager.recover_token(lost_token, amount, sender=bob)
     assert lost_token.balanceOf(diana) == amount
 
-def test_recover_lost_token_revert_manager(alice, lost_token, reward_manager):
+def test_recover_reward_token(bob, charlie, diana, reward_token, reward_manager):
+    amount = 10 ** 18
+    reward_token.transferFrom(bob, reward_manager, amount, sender=bob)
+    assert reward_token.balanceOf(reward_manager) == amount
+    # rest of lost token on charlies address, start with 10 ** 19
+    assert reward_token.balanceOf(charlie) == 9 * amount
+    # recover lost token to diana (recovery address)
+    reward_manager.recover_token(lost_token, amount, sender=bob)
+    assert lost_token.balanceOf(diana) == amount
+
+def test_recover_token_revert_manager(alice, lost_token, reward_manager):
     with ape.reverts("only reward managers can call this function"):
-        reward_manager.recover_lost_token(lost_token, 10 ** 18, sender=alice)
+        reward_manager.recover_token(lost_token, 10 ** 18, sender=alice)
 
-def test_recover_lost_token_revert_token(bob, reward_token, reward_manager):
-    with ape.reverts("cannot recover reward token"):
-        reward_manager.recover_lost_token(reward_token, 10 ** 18,  sender=bob)
-
-def test_recover_lost_token_revert_amount(bob, lost_token, reward_manager):
+def test_recover_token_revert_amount(bob, lost_token, reward_manager):
     with ape.reverts("amount must be greater than 0"):
-        reward_manager.recover_lost_token(lost_token, 0,  sender=bob)
+        reward_manager.recover_token(lost_token, 0,  sender=bob)
 
 

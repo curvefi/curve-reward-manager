@@ -82,14 +82,12 @@ def deposit_send_reward_token(_reward_receiver: address, _amount: uint256, _epoc
         Gauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount, _epoch)
 
 @external
-def recover_lost_token(_lost_token: address, _amount: uint256):
+def recover_token(_token: address, _amount: uint256):
     """
     @notice recover wrong token from contract to recovery address
-    @param _lost_token address of the token to recover
     @param _amount amount of the token to recover
     """
     assert msg.sender in self.managers, 'only reward managers can call this function'
-    assert _lost_token != self.reward_token, 'cannot recover reward token'
     assert _amount > 0, 'amount must be greater than 0'
 
-    assert ERC20(_lost_token).transfer(self.recovery_address, _amount, default_return_value=True)
+    assert ERC20(_token).transfer(self.recovery_address, _amount, default_return_value=True)

@@ -7,7 +7,7 @@ SECONDS_PER_WEEK = 604800
 def test_initial_state(fixed_rewards):
     assert not fixed_rewards.is_setup_complete()
     assert not fixed_rewards.is_reward_epochs_set()
-    assert fixed_rewards.get_remaining_epochs() == 0
+    assert fixed_rewards.get_number_of_remaining_epochs() == 0
 
 def test_managers(bob, charlie, fixed_rewards):
     assert fixed_rewards.managers(0) == bob
@@ -36,7 +36,7 @@ def test_set_reward_epochs(charlie, fixed_rewards):
     # Set new reward epochs using manager account
     fixed_rewards.set_reward_epochs(new_epochs, sender=charlie)
     
-    assert fixed_rewards.get_remaining_epochs() == len(new_epochs)
+    assert fixed_rewards.get_number_of_remaining_epochs() == len(new_epochs)
     assert fixed_rewards.is_reward_epochs_set()
     #assert fixed_rewards.reward_epochs() == new_epochs
 
@@ -229,21 +229,21 @@ def test_remaining_epochs_count(alice, bob, charlie, reward_manager, fixed_rewar
     new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
     fixed_rewards.set_reward_epochs(new_epochs, sender=charlie)
 
-    assert fixed_rewards.get_remaining_epochs() == 3
+    assert fixed_rewards.get_number_of_remaining_epochs() == 3
     
     # Setup the reward manager and receiver
     fixed_rewards.setup(reward_manager.address, recovery_gauge.address, sender=charlie)
 
     # Distribute epochs and check count
     fixed_rewards.distribute_reward(sender=bob)
-    assert fixed_rewards.get_remaining_epochs() == 2
+    assert fixed_rewards.get_number_of_remaining_epochs() == 2
     
     chain.pending_timestamp = chain.pending_timestamp + SECONDS_PER_WEEK
     chain.mine()
     fixed_rewards.distribute_reward(sender=bob)
-    assert fixed_rewards.get_remaining_epochs() == 1
+    assert fixed_rewards.get_number_of_remaining_epochs() == 1
     
     chain.pending_timestamp = chain.pending_timestamp + SECONDS_PER_WEEK
     chain.mine()
     fixed_rewards.distribute_reward(sender=bob)
-    assert fixed_rewards.get_remaining_epochs() == 0
+    assert fixed_rewards.get_number_of_remaining_epochs() == 0
