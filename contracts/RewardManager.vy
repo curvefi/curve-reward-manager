@@ -1,4 +1,4 @@
-# @version 0.3.10
+#pragma version 0.3.10
 """
 @title RewardManager
 @author martinkrung for curve.fi

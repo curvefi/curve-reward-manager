@@ -72,3 +72,12 @@ pip install eth-ape'[recommended-plugins]'
 ape plugins install arbitrum
 ape test
 ```
+
+## With FixedRewards
+
+1. Deploy many FixedRewards contracts instances
+2. Collect all contract addresses from the deployments of the FixedRewards contracts
+3. Add all contract addresses to the managers array of the RewardManager
+4. Deploy the RewardManager
+5. Set RewardManager contract address and reward receiver address (gauge) for each FixedRewards
+6. set desired reward epochs for each FixedRewards

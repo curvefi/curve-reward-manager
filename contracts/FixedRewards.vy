@@ -1,9 +1,9 @@
-# @version 0.3.10
+#pragma version 0.3.10
 """
-@title RewardManager
+@title FixedRewards
 @author martinkrung for curve.fi
 @license MIT
-@notice Distributes rewards through RewardManager based on hardcoded epochs
+@notice Distributes fixed rewards for one gauge through RewardManager
 """
 
 interface RewardManager:
@@ -38,7 +38,6 @@ event RewardDistributed:
     reward_amount: uint256
     remaining_reward_epochs: uint256
     timestamp: uint256
-
 
 
 @external
@@ -153,6 +152,14 @@ def get_all_epochs() -> DynArray[uint256, 52]:
     @return DynArray[uint256, 52] Array containing all remaining reward epoch amounts
     """
     return self.reward_epochs
+
+@view
+def get_all_managers() -> DynArray[address, 3]:
+    """
+    @notice Get all managers
+    @return DynArray[address, 3] Array containing all managers
+    """
+    return self.managers
 
 @external
 @view

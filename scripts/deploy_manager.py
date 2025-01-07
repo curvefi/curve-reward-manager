@@ -55,7 +55,7 @@ cli.add_command(deploy)
 def deploy_fixed_rewards(network, provider, account):
 
     managers = REWARD_MANAGERS.split(",")
-    fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="100000", publish=True)
+    fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
 
     #fixed_rewards.setup(reward_manager.address, recovery_gauge.address)
 
