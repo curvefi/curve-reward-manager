@@ -100,10 +100,10 @@ def test_recover_reward_token(bob, charlie, diana, reward_token, reward_manager)
     reward_token.transferFrom(bob, reward_manager, amount, sender=bob)
     assert reward_token.balanceOf(reward_manager) == amount
     # rest of lost token on charlies address, start with 10 ** 19
-    assert reward_token.balanceOf(charlie) == 9 * amount
+    assert reward_token.balanceOf(bob) == 9 * amount
     # recover lost token to diana (recovery address)
-    reward_manager.recover_token(lost_token, amount, sender=bob)
-    assert lost_token.balanceOf(diana) == amount
+    reward_manager.recover_token(reward_token, amount, sender=bob)
+    assert reward_token.balanceOf(diana) == amount
 
 def test_recover_token_revert_manager(alice, lost_token, reward_manager):
     with ape.reverts("only reward managers can call this function"):
