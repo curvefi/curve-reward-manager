@@ -68,7 +68,7 @@ cli.add_command(deploy_fixed_rewards)
 
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
-def deploy_many_fixed_rewards(network, provider, account):
+def deploy_many_fixed_rewards(ecosystem, network, provider, account):
 
 
     account.set_autosign(True)
@@ -76,12 +76,21 @@ def deploy_many_fixed_rewards(network, provider, account):
     gauges = GAUGE_ALLOWLIST.split(",")
     managers = REWARD_MANAGERS.split(",")
     fixed_rewards_contracts = []
-    
+
+    click.echo(f"ecosystem: {ecosystem.name}")
+    click.echo(f"network: {network.name}")
+
+    if ecosystem.name == 'arbitrum':
+        max_fee = "10 gwei"
+    else:
+        max_fee = "0.1 gwei"
+        print("Using max fee of 0.1 gwei")
+
     for gauge in gauges:
         # Sleep for 1 second between deployments
         import time
 
-        fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
+        fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
         fixed_rewards_contracts.append(fixed_rewards)
         #fixed_rewards.setup(DEPLOYED_REWARDMANAGER, gauge, sender=account, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="1000000")
 

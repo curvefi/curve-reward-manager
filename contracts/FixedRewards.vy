@@ -22,16 +22,16 @@ reward_epochs: public(DynArray[uint256, 52])  # Storing reward amounts
 last_reward_distribution_time: public(uint256)
 have_rewards_started: public(bool)
 
-SECONDS_PER_WEEK: constant(uint256) = 7 * 24 * 60 * 60  # 1 week in seconds
+WEEK: constant(uint256) = 7 * 24 * 60 * 60  # 1 week in seconds
 
 VERSION: constant(String[8]) = "0.9.0"
 
 # Events
 
 event SetupCompleted:
-    reward_manager_address: indexed(address)
-    reward_receiver_address: indexed(address)
-    min_epoch_duration: indexed(uint256)
+    reward_manager_address: address
+    reward_receiver_address: address
+    min_epoch_duration: uint256
     timestamp: uint256
 
 event RewardEpochsSet:
@@ -51,7 +51,7 @@ def __init__(_managers: DynArray[address, 3]):
     @param _managers List of manager addresses that can control the contract
     """
     self.managers = _managers
-    self.min_epoch_duration  = SECONDS_PER_WEEK
+    self.min_epoch_duration = WEEK
 
 @external
 def setup(_reward_manager_address: address, _reward_receiver_address: address, _min_epoch_duration: uint256) -> bool:
@@ -64,7 +64,7 @@ def setup(_reward_manager_address: address, _reward_receiver_address: address, _
     """
     assert msg.sender in self.managers, "only managers can call this function"
     assert not self.is_setup_complete, "Setup already completed"
-    assert 3 * SECONDS_PER_WEEK / 7 <= _min_epoch_duration and _min_epoch_duration <= SECONDS_PER_WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
+    assert 3 * WEEK / 7 <= _min_epoch_duration and _min_epoch_duration <= WEEK  * 4 * 12, 'epoch duration must be between 3 days and a year'
     
     self.reward_manager_address = _reward_manager_address
     self.reward_receiver_address = _reward_receiver_address
