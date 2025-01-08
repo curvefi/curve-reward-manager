@@ -20,8 +20,12 @@ reward_epochs: public(DynArray[uint256, 52])  # Storing reward amounts
 last_reward_distribution_time: public(uint256)
 have_rewards_started: public(bool)
 
+force_verify: public(bool)
+
 SECONDS_PER_WEEK: constant(uint256) = 7 * 24 * 60 * 60  # 1 week in seconds
 MIN_SECONDS_BETWEEN_DISTRIBUTIONS: constant(uint256) = SECONDS_PER_WEEK
+
+VERSION: constant(String[8]) = "0.9.0"
 
 # Events
 
@@ -47,7 +51,7 @@ def __init__(_managers: DynArray[address, 3]):
     @param _managers List of manager addresses that can control the contract
     """
     self.managers = _managers
-     
+    self.force_verify = True
 
 @external
 def setup(_reward_manager_address: address, _reward_receiver_address: address) -> bool:
@@ -153,6 +157,7 @@ def get_all_epochs() -> DynArray[uint256, 52]:
     """
     return self.reward_epochs
 
+@external
 @view
 def get_all_managers() -> DynArray[address, 3]:
     """

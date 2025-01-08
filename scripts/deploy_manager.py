@@ -13,6 +13,8 @@ RECOVERY_ADDRESS = os.getenv('RECOVERY_ADDRESS')
 REWARD_TOKEN_TESTNET = os.getenv('REWARD_TOKEN_TESTNET')
 GAUGE_ALLOWLIST = os.getenv('GAUGE_ALLOWLIST')
 
+DEPLOYED_REWARDMANAGER = os.getenv('DEPLOYED_REWARDMANAGER')
+
 @click.group()
 def cli():
     pass
@@ -62,3 +64,46 @@ def deploy_fixed_rewards(network, provider, account):
     click.echo(fixed_rewards)
 
 cli.add_command(deploy_fixed_rewards)
+
+
+@click.command(cls=ConnectedProviderCommand)
+@account_option()
+def deploy_many_fixed_rewards(network, provider, account):
+
+
+    account.set_autosign(True)
+
+    gauges = GAUGE_ALLOWLIST.split(",")
+    managers = REWARD_MANAGERS.split(",")
+    fixed_rewards_contracts = []
+    
+    for gauge in gauges:
+        # Sleep for 1 second between deployments
+        import time
+
+        fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee="10 gwei", gas_limit="100000")
+        fixed_rewards_contracts.append(fixed_rewards)
+        #fixed_rewards.setup(DEPLOYED_REWARDMANAGER, gauge, sender=account, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="1000000")
+
+        #epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
+        #fixed_rewards.set_reward_epochs(epochs, sender=account, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="1000000")
+
+        # Log contract address and transaction info
+        with open("fixed_rewards_contracts.log", "a+") as f:
+            f.write(f"Fixed Rewards Contract: {fixed_rewards.address}\n")
+            f.write(f"Deployed for gauge: {gauge}, but not yet set\n")
+            # Get transaction hash from last transaction (set_reward_epochs)
+            f.write(f"Link: https://sepolia.arbiscan.io/address{fixed_rewards.address}\n")
+            #tx_hash = fixed_rewards.last_tx_hash
+            #f.write(f"Transaction: https://sepolia.arbiscan.io/tx/{tx_hash}\n")
+            f.write(f"Fixed Rewards Contract List: {[str(contract) for contract in fixed_rewards_contracts]}\n")
+            f.write("-" * 80 + "\n")
+
+        # Sleep for 1 second between deployments
+        import time
+        time.sleep(2)
+
+    click.echo(fixed_rewards_contracts)
+    click.echo(fixed_rewards)
+
+cli.add_command(deploy_many_fixed_rewards)

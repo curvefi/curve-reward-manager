@@ -14,20 +14,20 @@ interface LegacyGauge:
 interface Gauge:
     def deposit_reward_token(_reward_token: address, _amount: uint256, _epoch: uint256): nonpayable
 
-WEEK: constant(uint256) = 604800
-VERSION: constant(String[8]) = "1.0.0"
+WEEK: constant(uint256) = 7 * 24 * 60 * 60  # 1 week in seconds
+VERSION: constant(String[8]) = "0.9.0"
 
-managers: public(DynArray[address, 3])
+managers: public(DynArray[address, 30])
 reward_token: public(address)
 reward_receivers: public(DynArray[address, 20])
 recovery_address: public(address)
 
 
 @external
-def __init__(_managers: DynArray[address, 3], _reward_token: address, _reward_receivers: DynArray[address, 20], _recovery_address: address):
+def __init__(_managers: DynArray[address, 30], _reward_token: address, _reward_receivers: DynArray[address, 20], _recovery_address: address):
     """
     @notice Contract constructor
-    @param _managers set managers who can deposit reward token
+    @param _managers set managers who can send reward token to gauges
     @param _reward_token set reward token address
     @param _reward_receivers allowed gauges to receiver reward
     @param _recovery_address set recovery address
@@ -91,3 +91,21 @@ def recover_token(_token: address, _amount: uint256):
     assert _amount > 0, 'amount must be greater than 0'
 
     assert ERC20(_token).transfer(self.recovery_address, _amount, default_return_value=True)
+
+@external
+@view
+def get_all_managers() -> DynArray[address, 30]:
+    """
+    @notice Get all managers
+    @return DynArray[address, 30] list containing all managers
+    """
+    return self.managers
+
+@external
+@view
+def get_all_reward_receivers() -> DynArray[address, 20]:
+    """
+    @notice Get all reward receivers
+    @return DynArray[address, 20] list containing all reward receivers
+    """
+    return self.reward_receivers
