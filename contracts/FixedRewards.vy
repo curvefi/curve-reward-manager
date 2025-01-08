@@ -13,6 +13,8 @@ interface RewardManager:
 managers: public(DynArray[address, 3])  # Changed from owner to managers
 reward_manager_address: public(address)
 reward_receiver_address: public(address)
+min_epoch_duration: public(uint256)
+
 is_setup_complete: public(bool)
 is_reward_epochs_set: public(bool)
 
@@ -20,10 +22,7 @@ reward_epochs: public(DynArray[uint256, 52])  # Storing reward amounts
 last_reward_distribution_time: public(uint256)
 have_rewards_started: public(bool)
 
-force_verify: public(bool)
-
 SECONDS_PER_WEEK: constant(uint256) = 7 * 24 * 60 * 60  # 1 week in seconds
-MIN_SECONDS_BETWEEN_DISTRIBUTIONS: constant(uint256) = SECONDS_PER_WEEK
 
 VERSION: constant(String[8]) = "0.9.0"
 
@@ -32,6 +31,7 @@ VERSION: constant(String[8]) = "0.9.0"
 event SetupCompleted:
     reward_manager_address: indexed(address)
     reward_receiver_address: indexed(address)
+    min_epoch_duration: indexed(uint256)
     timestamp: uint256
 
 event RewardEpochsSet:
@@ -51,24 +51,29 @@ def __init__(_managers: DynArray[address, 3]):
     @param _managers List of manager addresses that can control the contract
     """
     self.managers = _managers
-    self.force_verify = True
+    self.min_epoch_duration  = SECONDS_PER_WEEK
 
 @external
-def setup(_reward_manager_address: address, _reward_receiver_address: address) -> bool:
+def setup(_reward_manager_address: address, _reward_receiver_address: address, _min_epoch_duration: uint256) -> bool:
     """
     @notice Set the reward manager and receiver addresses (can only be set once)
     @param _reward_manager_address Address of the RewardManager contract
     @param _reward_receiver_address Address of the RewardReceiver contract
+    @param _min_epoch_duration Minimum epoch duration in seconds
     @return bool Setup success
     """
     assert msg.sender in self.managers, "only managers can call this function"
     assert not self.is_setup_complete, "Setup already completed"
+    assert 3 * SECONDS_PER_WEEK / 7 <= _min_epoch_duration and _min_epoch_duration <= SECONDS_PER_WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
     
     self.reward_manager_address = _reward_manager_address
     self.reward_receiver_address = _reward_receiver_address
+    self.min_epoch_duration = _min_epoch_duration
+
     self.is_setup_complete = True
 
-    log SetupCompleted(_reward_manager_address, _reward_receiver_address, block.timestamp)
+    log SetupCompleted(_reward_manager_address, _reward_receiver_address, _min_epoch_duration, block.timestamp)
+
     return True
 
 @external
@@ -106,7 +111,7 @@ def distribute_reward() -> bool:
         self.have_rewards_started = True
     else:
         # Check if minimum time has passed since last distribution
-        assert block.timestamp >= self.last_reward_distribution_time + MIN_SECONDS_BETWEEN_DISTRIBUTIONS, "Minimum time between distributions not met"
+        assert block.timestamp >= self.last_reward_distribution_time +  self.min_epoch_duration , "Minimum time between distributions not met"
     
     # Get the reward amount for the current epoch (last in array)  
     current_reward_amount: uint256 = self.reward_epochs.pop()
@@ -139,8 +144,8 @@ def get_next_epoch_info() -> (uint256, uint256):
     
     seconds_until_next_distribution: uint256 = 0
     if self.have_rewards_started:
-        if block.timestamp < self.last_reward_distribution_time + MIN_SECONDS_BETWEEN_DISTRIBUTIONS:
-            seconds_until_next_distribution = self.last_reward_distribution_time + MIN_SECONDS_BETWEEN_DISTRIBUTIONS - block.timestamp
+        if block.timestamp < self.last_reward_distribution_time + self.min_epoch_duration:
+            seconds_until_next_distribution = self.last_reward_distribution_time + self.min_epoch_duration - block.timestamp
     
     return (
         self.reward_epochs[len(self.reward_epochs) - 1],  # Next reward amount to distribute (last element)

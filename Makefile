@@ -33,7 +33,8 @@ deploy_taiko:
 	ape run scripts/deploy_manager.py deploy --network taiko:mainnet:node
 
 deploy_fixed_rewards_taiko:
-	ape run scripts/deploy_manager.py deploy-fixed-rewards --network taiko:mainnet:node
+	ape run scripts/deploy_manager.py deploy-many-fixed-rewards --network taiko:mainnet:node
+
 
 import_pvk:
 	ape accounts import arbideploy

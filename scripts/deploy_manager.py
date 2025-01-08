@@ -81,7 +81,7 @@ def deploy_many_fixed_rewards(network, provider, account):
         # Sleep for 1 second between deployments
         import time
 
-        fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee="10 gwei", gas_limit="100000")
+        fixed_rewards = account.deploy(project.FixedRewards, managers, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
         fixed_rewards_contracts.append(fixed_rewards)
         #fixed_rewards.setup(DEPLOYED_REWARDMANAGER, gauge, sender=account, max_priority_fee="1000 wei", max_fee="1 gwei", gas_limit="1000000")
 
@@ -101,7 +101,7 @@ def deploy_many_fixed_rewards(network, provider, account):
 
         # Sleep for 1 second between deployments
         import time
-        time.sleep(2)
+        time.sleep(120)
 
     click.echo(fixed_rewards_contracts)
     click.echo(fixed_rewards)
