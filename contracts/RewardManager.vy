@@ -22,6 +22,13 @@ reward_token: public(address)
 receiving_gauges: public(DynArray[address, 20])
 recovery_address: public(address)
 
+event SentRewardToken:
+    receiving_gauge: address
+    reward_token: address
+    amount: uint256
+    _epoch: uint256
+    timestamp: uint256
+
 
 @external
 def __init__(_managers: DynArray[address, 30], _reward_token: address, _receiving_gauges: DynArray[address, 20], _recovery_address: address):
@@ -56,6 +63,7 @@ def send_reward_token(_receiving_gauge: address, _amount: uint256, _epoch: uint2
     else:
         Gauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount, _epoch)
 
+    log SentRewardToken(_receiving_gauge, self.reward_token, _amount, _epoch, block.timestamp)
 
 @external
 def recover_token(_token: address, _amount: uint256):
