@@ -77,7 +77,7 @@ def setup(_reward_manager_address: address, _reward_receiver_address: address, _
     return True
 
 @external
-def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]) -> bool:
+def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]):
     """
     @notice  Set the reward epochs in reverse order: last value is the first to be distributed, first value is the last to be distributed
     @param _reward_epochs List of reward amounts ordered from first to last epoch
@@ -91,11 +91,10 @@ def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]) -> bool:
     self.is_reward_epochs_set = True
 
     log RewardEpochsSet(_reward_epochs, block.timestamp)    
-    return True
 
 
 @external
-def distribute_reward() -> bool:
+def distribute_reward():
     """
     @notice Distribute rewards for the current epoch if conditions are met
     @return bool Distribution success
@@ -128,7 +127,6 @@ def distribute_reward() -> bool:
         block.timestamp
     )
     
-    return True
 
 @external
 @view

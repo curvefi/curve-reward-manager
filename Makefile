@@ -17,6 +17,9 @@ deploy_fixed_rewards_local:
 deploy_fixed_rewards_arbitrum_sepolia:
 	ape run scripts/deploy_manager.py deploy-fixed-rewards --network arbitrum:sepolia:infura
 
+deploy_fixed_rewards_taiko:
+	ape run scripts/deploy_manager.py deploy-fixed-rewards --network taiko:mainnet:node
+
 get_constructor_abi:
 	python  scripts/get_constructor_abi.py
 

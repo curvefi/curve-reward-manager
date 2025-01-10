@@ -110,7 +110,7 @@ def deploy_many_fixed_rewards(ecosystem, network, provider, account):
 
         # Sleep for 1 second between deployments
         import time
-        time.sleep(120)
+        time.sleep(61)
 
     click.echo(fixed_rewards_contracts)
     click.echo(fixed_rewards)
