@@ -1,9 +1,9 @@
 #pragma version 0.3.10
 """
-@title FixedRewards
+@title Campaign
 @author martinkrung for curve.fi
 @license MIT
-@notice Distributes fixed rewards for one gauge through RewardManager
+@notice Distributes variable rewards for one gauge through RewardManager
 """
 
 interface RewardManager:
