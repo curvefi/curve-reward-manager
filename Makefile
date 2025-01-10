@@ -11,14 +11,14 @@ deploy_info:
 deploy_local:
 	ape run scripts/deploy_manager.py deploy --network arbitrum:mainnet-fork:foundry
 
-deploy_fixed_rewards_local:
-	ape run scripts/deploy_manager.py deploy-fixed-rewards --network arbitrum:mainnet-fork:foundry
+deploy_single_campaign_local:
+	ape run scripts/deploy_manager.py deploy-single-campaign --network arbitrum:mainnet-fork:foundry
 
-deploy_fixed_rewards_arbitrum_sepolia:
-	ape run scripts/deploy_manager.py deploy-fixed-rewards --network arbitrum:sepolia:infura
+deploy_single_campaign_arbitrum_sepolia:
+	ape run scripts/deploy_manager.py deploy-single-campaign --network arbitrum:sepolia:infura
 
-deploy_fixed_rewards_taiko:
-	ape run scripts/deploy_manager.py deploy-fixed-rewards --network taiko:mainnet:node
+deploy_single_campaign_taiko:
+	ape run scripts/deploy_manager.py deploy-single-campaign --network taiko:mainnet:node
 
 get_constructor_abi:
 	python  scripts/get_constructor_abi.py
@@ -35,9 +35,8 @@ deploy_info_taiko:
 deploy_taiko:
 	ape run scripts/deploy_manager.py deploy --network taiko:mainnet:node
 
-deploy_fixed_rewards_taiko:
-	ape run scripts/deploy_manager.py deploy-many-fixed-rewards --network taiko:mainnet:node
-
+deploy_many_single_campaigns_taiko:
+	ape run scripts/deploy_manager.py deploy-many-single-campaigns --network taiko:mainnet:node
 
 import_pvk:
 	ape accounts import arbideploy

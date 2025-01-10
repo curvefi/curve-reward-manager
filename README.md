@@ -55,12 +55,9 @@ graph TD
     end
 ```
 
-
-
 ## Origin
 
 Based on https://github.com/curvefi/curve-dao-contracts/blob/master/contracts/streamers/RewardStream.vy
-
 
 ## Install
 
@@ -73,11 +70,11 @@ ape plugins install arbitrum
 ape test
 ```
 
-## With FixedRewards
+## With SingleCampaign
 
-1. Deploy many FixedRewards contracts instances
-2. Collect all contract addresses from the deployments of the FixedRewards contracts
+1. Deploy many SingleCampaign contracts instances
+2. Collect all contract addresses from the deployments of the SingleCampaign contracts
 3. Add all contract addresses to the managers array of the RewardManager
 4. Deploy the RewardManager
-5. Set RewardManager contract address and reward receiver address (gauge) for each FixedRewards
-6. set desired reward epochs for each FixedRewards
+5. Set RewardManager contract address and reward receiver address (gauge) for each SingleCampaign
+6. set desired reward epochs for each SingleCampaign

@@ -1,6 +1,6 @@
 #pragma version 0.3.10
 """
-@title Campaign
+@title SingleCampaign
 @author martinkrung for curve.fi
 @license MIT
 @notice Distributes variable rewards for one gauge through RewardManager

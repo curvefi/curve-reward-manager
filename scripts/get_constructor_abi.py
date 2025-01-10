@@ -11,7 +11,7 @@ def get_constructor_args():
     print("Managers:", managers)
 
     # Get constructor ABI
-    constructor = next(item for item in project.FixedRewards.contract_type.abi if item.type == 'constructor')
+    constructor = next(item for item in project.SingleCampaign.contract_type.abi if item.type == 'constructor')
 
     # Get the constructor input types
     input_types = [arg.type for arg in constructor.inputs]

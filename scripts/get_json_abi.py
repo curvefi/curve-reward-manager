@@ -1,7 +1,7 @@
 from ape import project
 
 # Get ABI from your contract
-abi = project.FixedRewards.contract_type.abi
+abi = project.SingleCampaign.contract_type.abi
 print(abi)
 
 # Convert ABI objects to dictionaries
