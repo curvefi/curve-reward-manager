@@ -22,9 +22,9 @@ reward_epochs: public(DynArray[uint256, 52])  # Storing reward amounts
 last_reward_distribution_time: public(uint256)
 have_rewards_started: public(bool)
 
-WEEK: constant(uint256) = 7 * 24 * 60 * 60  # 1 week in seconds
-
-VERSION: constant(String[8]) = "0.9.0"
+WEEK: public(constant(uint256)) = 7 * 24 * 60 * 60  # 1 week in seconds
+VERSION: public(constant(String[8])) = "0.9.0"
+DISTRIBUTION_BUFFER: public(constant(uint256)) = 2 * 60 * 60  # 2 hour window for early distribution
 
 # Events
 
@@ -106,7 +106,7 @@ def distribute_reward():
         self.have_rewards_started = True
     else:
         # Check if minimum time has passed since last distribution
-        assert block.timestamp >= self.last_reward_distribution_time +  self.min_epoch_duration , "Minimum time between distributions not met"
+        assert block.timestamp + DISTRIBUTION_BUFFER >= self.last_reward_distribution_time + self.min_epoch_duration, "Minimum time between distributions not met"
     
     # Get the reward amount for the current epoch (last in array)  
     current_reward_amount: uint256 = self.reward_epochs.pop()

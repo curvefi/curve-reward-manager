@@ -138,6 +138,7 @@ def test_distribution_order(alice, bob, charlie, reward_manager, single_campaign
 def test_distribution_timing(alice, bob, charlie, reward_manager, single_campaign, test_gauge, chain):
     new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
     min_epoch_duration = 3 * DAY
+    DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
     single_campaign.set_reward_epochs(new_epochs, sender=charlie)
 
     # Setup the reward manager and receiver
@@ -150,22 +151,22 @@ def test_distribution_timing(alice, bob, charlie, reward_manager, single_campaig
     with ape.reverts("Minimum time between distributions not met"):
         single_campaign.distribute_reward(sender=bob)
     
-    # Move time forward less than a week
-    chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration - 1000
+    # Move time forward less than a min_epoch_duration
+    chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration - DISTRIBUTION_BUFFER - 1000
     chain.mine()
     
     # Should still fail
     with ape.reverts("Minimum time between distributions not met"):
         single_campaign.distribute_reward(sender=bob)
     
-    # Move time to exactly one week
+    # Move time to exactly one min_epoch_duration
     chain.pending_timestamp = chain.pending_timestamp + 1000
     chain.mine()
     
     # Should succeed now
     single_campaign.distribute_reward(sender=bob)
         
-    # Move time forward less than a week
+    # Move time forward less than a min_epoch_duration
     chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration + 10000
     chain.mine()
 
@@ -287,6 +288,7 @@ def test_distribution_respects_min_epoch_duration(bob, charlie, reward_manager, 
     """Test that distribution timing respects custom min_epoch_duration"""
     # Setup with 4-day minimum duration
     custom_duration = 4 * DAY
+    DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
     new_epochs = [1 * 10**18, 2 * 10**18]
     
     single_campaign.set_reward_epochs(new_epochs, sender=charlie)
@@ -296,14 +298,46 @@ def test_distribution_respects_min_epoch_duration(bob, charlie, reward_manager, 
     single_campaign.distribute_reward(sender=bob)
     
     # Try to distribute before minimum duration - should fail
-    chain.pending_timestamp = chain.pending_timestamp + custom_duration - 1000
+    chain.pending_timestamp = chain.pending_timestamp + custom_duration - DISTRIBUTION_BUFFER - 1000
     chain.mine()
     
     with ape.reverts("Minimum time between distributions not met"):
         single_campaign.distribute_reward(sender=bob)
     
     # Move past minimum duration - should succeed
-    chain.pending_timestamp = chain.pending_timestamp + 2000  # Move past min duration
+    chain.pending_timestamp = chain.pending_timestamp + custom_duration + DISTRIBUTION_BUFFER + 2000  # Move past min duration
     chain.mine()
     
     single_campaign.distribute_reward(sender=bob)
+
+def test_distribution_buffer(chain, bob, charlie, reward_manager, test_gauge, single_campaign):
+    """Test that distribution can occur within the buffer window"""
+    # Setup with 1-week minimum duration
+    WEEK = single_campaign.WEEK()  # Get constant from contract
+    DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
+
+    new_epochs = [1 * 10**18, 2 * 10**18]
+    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.setup(reward_manager.address, test_gauge.address, WEEK, sender=bob)
+    
+    # First distribution should work
+    single_campaign.distribute_reward(sender=bob)
+    
+    # Try to distribute way too early - should fail
+    chain.pending_timestamp = chain.pending_timestamp + WEEK - DISTRIBUTION_BUFFER - 1000  # Just before buffer window
+    chain.mine()
+    
+    with ape.reverts("Minimum time between distributions not met"):
+        single_campaign.distribute_reward(sender=bob)
+    
+    # Move into buffer window - should succeed
+    chain.pending_timestamp = chain.pending_timestamp + 1000  # Move into buffer window
+    chain.mine()
+
+    # Verify we can get next epoch info
+    next_amount, seconds_until_next = single_campaign.get_next_epoch_info()
+    assert next_amount == 1 * 10**18
+    assert seconds_until_next > 0  # Should have some time until next distribution
+        
+    single_campaign.distribute_reward(sender=bob)  # Should succeed within buffer window
+    
