@@ -7,12 +7,12 @@
 """
 
 interface RewardManager:
-    def send_reward_token(_reward_receiver: address, _amount: uint256): nonpayable
+    def send_reward_token(_receiving_gauge: address, _amount: uint256): nonpayable
 
 # State Variables
 managers: public(DynArray[address, 3])  # Changed from owner to managers
 reward_manager_address: public(address)
-reward_receiver_address: public(address)
+receiving_gauge_address: public(address)
 min_epoch_duration: public(uint256)
 
 is_setup_complete: public(bool)
@@ -30,7 +30,7 @@ VERSION: constant(String[8]) = "0.9.0"
 
 event SetupCompleted:
     reward_manager_address: address
-    reward_receiver_address: address
+    receiving_gauge_address: address
     min_epoch_duration: uint256
     timestamp: uint256
 
@@ -54,34 +54,31 @@ def __init__(_managers: DynArray[address, 3]):
     self.min_epoch_duration = WEEK
 
 @external
-def setup(_reward_manager_address: address, _reward_receiver_address: address, _min_epoch_duration: uint256) -> bool:
+def setup(_reward_manager_address: address, _receiving_gauge_address: address, _min_epoch_duration: uint256):
     """
     @notice Set the reward manager and receiver addresses (can only be set once)
     @param _reward_manager_address Address of the RewardManager contract
-    @param _reward_receiver_address Address of the RewardReceiver contract
+    @param _receiving_gauge_address Address of the RewardReceiver contract
     @param _min_epoch_duration Minimum epoch duration in seconds
-    @return bool Setup success
     """
     assert msg.sender in self.managers, "only managers can call this function"
     assert not self.is_setup_complete, "Setup already completed"
     assert 3 * WEEK / 7 <= _min_epoch_duration and _min_epoch_duration <= WEEK  * 4 * 12, 'epoch duration must be between 3 days and a year'
     
     self.reward_manager_address = _reward_manager_address
-    self.reward_receiver_address = _reward_receiver_address
+    self.receiving_gauge_address = _receiving_gauge_address
     self.min_epoch_duration = _min_epoch_duration
 
     self.is_setup_complete = True
 
-    log SetupCompleted(_reward_manager_address, _reward_receiver_address, _min_epoch_duration, block.timestamp)
+    log SetupCompleted(_reward_manager_address, _receiving_gauge_address, _min_epoch_duration, block.timestamp)
 
-    return True
 
 @external
 def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]):
     """
     @notice  Set the reward epochs in reverse order: last value is the first to be distributed, first value is the last to be distributed
     @param _reward_epochs List of reward amounts ordered from first to last epoch
-    @return bool Setting success
     """
     assert msg.sender in self.managers, "only managers can call this function"
     assert not self.is_reward_epochs_set, "Reward epochs can only be set once"
@@ -97,7 +94,6 @@ def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]):
 def distribute_reward():
     """
     @notice Distribute rewards for the current epoch if conditions are met
-    @return bool Distribution success
     """
     assert msg.sender in self.managers, "only managers can call this function"
     assert self.is_setup_complete, "Setup not completed"
@@ -119,7 +115,7 @@ def distribute_reward():
     self.last_reward_distribution_time = block.timestamp
     
     # Call reward manager to send reward
-    RewardManager(self.reward_manager_address).send_reward_token(self.reward_receiver_address, current_reward_amount)
+    RewardManager(self.reward_manager_address).send_reward_token(self.receiving_gauge_address, current_reward_amount)
     
     log RewardDistributed(
         current_reward_amount,

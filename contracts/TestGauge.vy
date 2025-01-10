@@ -1,9 +1,9 @@
 # @version 0.3.10
 """
-@title RecoveryGauge
+@title TestGauge
 @author martinkrung for curve.fi
 @license MIT
-@notice test gauge for testing and to recover token
+@notice test gauge for testing
 """
 
 from vyper.interfaces import ERC20

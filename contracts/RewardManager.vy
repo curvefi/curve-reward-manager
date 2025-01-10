@@ -19,42 +19,42 @@ VERSION: constant(String[8]) = "0.9.0"
 
 managers: public(DynArray[address, 30])
 reward_token: public(address)
-reward_receivers: public(DynArray[address, 20])
+receiving_gauges: public(DynArray[address, 20])
 recovery_address: public(address)
 
 
 @external
-def __init__(_managers: DynArray[address, 30], _reward_token: address, _reward_receivers: DynArray[address, 20], _recovery_address: address):
+def __init__(_managers: DynArray[address, 30], _reward_token: address, _receiving_gauges: DynArray[address, 20], _recovery_address: address):
     """
     @notice Contract constructor
     @param _managers set managers who can send reward token to gauges
     @param _reward_token set reward token address
-    @param _reward_receivers allowed gauges to receiver reward
+    @param _receiving_gauges allowed gauges to receiver reward
     @param _recovery_address set recovery address
     """
     self.managers = _managers
     self.reward_token = _reward_token
-    self.reward_receivers = _reward_receivers
+    self.receiving_gauges = _receiving_gauges
     self.recovery_address = _recovery_address
 
 @external
-def send_reward_token(_reward_receiver: address, _amount: uint256, _epoch: uint256 = WEEK):
+def send_reward_token(_receiving_gauge: address, _amount: uint256, _epoch: uint256 = WEEK):
     """
     @notice send reward token from contract to gauge
-    @param _reward_receiver gauges to receiver reward
+    @param _receiving_gauge gauges to receiver reward
     @param _amount The amount of reward token being sent
     @param _epoch The duration the rewards are distributed across in seconds. Between 3 days and a year, week by default
     """
     assert msg.sender in self.managers, 'only reward managers can call this function'
-    assert _reward_receiver in self.reward_receivers, 'only reward receiver which are allowed'
+    assert _receiving_gauge in self.receiving_gauges, 'only reward receiver which are allowed'
     assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
-    assert ERC20(self.reward_token).approve(_reward_receiver, _amount, default_return_value=True)
+    assert ERC20(self.reward_token).approve(_receiving_gauge, _amount, default_return_value=True)
     # legacy gauges have no epoch parameter 
     # new deposit_reward_token has epoch parameter default to WEEK
     if _epoch == WEEK:
-        LegacyGauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount)
+        LegacyGauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount)
     else:
-        Gauge(_reward_receiver).deposit_reward_token(self.reward_token, _amount, _epoch)
+        Gauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount, _epoch)
 
 
 @external
@@ -79,9 +79,9 @@ def get_all_managers() -> DynArray[address, 30]:
 
 @external
 @view
-def get_all_reward_receivers() -> DynArray[address, 20]:
+def get_all_receiving_gauges() -> DynArray[address, 20]:
     """
     @notice Get all reward receivers
     @return DynArray[address, 20] list containing all reward receivers
     """
-    return self.reward_receivers
+    return self.receiving_gauges

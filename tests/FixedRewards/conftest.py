@@ -21,12 +21,11 @@ def lost_token(project, alice, charlie):
     print(balance)
     return lost_token
 
-
 @pytest.fixture(scope="module")
-def recovery_gauge(project, alice, charlie, diana, reward_token):
+def test_gauge(project, alice, charlie, diana, reward_token):
     # bob manager address
     # diana is recovery address
-    gauge = alice.deploy(project.RecoveryGauge, reward_token, diana)
+    gauge = alice.deploy(project.TestGauge, reward_token, diana)
     return gauge
 
 @pytest.fixture(scope="module")
@@ -36,15 +35,15 @@ def fixed_rewards(project, alice, bob, charlie):
     return contract
 
 @pytest.fixture(scope="module")
-def reward_manager(project, alice, bob, charlie, diana, reward_token, recovery_gauge, fixed_rewards):
+def reward_manager(project, alice, bob, charlie, diana, reward_token, test_gauge, fixed_rewards):
     # bob manager address
     # diana is recovery address
     print(fixed_rewards)
-    reward_manager_contract = alice.deploy(project.RewardManager, [bob, charlie, fixed_rewards], reward_token, [recovery_gauge], diana)
+    reward_manager_contract = alice.deploy(project.RewardManager, [bob, charlie, fixed_rewards], reward_token, [test_gauge], diana)
     reward_token.approve(reward_manager_contract, 10 ** 19, sender=bob) 
     print(reward_manager_contract)
     # Setup the reward manager and receiver
-    #fixed_rewards.setup(reward_manager.address, recovery_gauge.address, sender=alice)
+    #fixed_rewards.setup(reward_manager.address, test_gauge.address, sender=alice)
 
     amount = 10 ** 19
     reward_token.transfer(reward_manager_contract, amount, sender=bob)
