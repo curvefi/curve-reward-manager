@@ -20,7 +20,7 @@ def test_set_reward_manager(bob, reward_manager, test_gauge, fixed_rewards):
 
     assert fixed_rewards.reward_manager_address() == reward_manager.address
     print(fixed_rewards.reward_manager_address())
-    assert fixed_rewards.receiving_gauge_address() == test_gauge.address
+    assert fixed_rewards.receiving_gauge() == test_gauge.address
     assert fixed_rewards.min_epoch_duration() == min_epoch_duration
 
 def test_set_reward_manager_revert_not_manager(alice, reward_manager, test_gauge, fixed_rewards):
