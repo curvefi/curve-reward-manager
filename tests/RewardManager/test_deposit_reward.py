@@ -44,23 +44,6 @@ def test_reward_manager_send_reward_token_epoch(alice, bob, diana, reward_token,
     assert amount == balance_recoverd
     assert amount == reward_manager_balance
 
-def test_reward_manager_deposit_simple(bob, recovery_gauge, reward_manager):
-    reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18,  sender=bob)
-
-def test_reward_manager_deposit_token(alice, bob, diana, reward_token, recovery_gauge, reward_manager):
-    amount = 10 ** 17
-    reward_manager.deposit_send_reward_token(recovery_gauge, amount,  sender=bob)
-    assert recovery_gauge.recover_token(sender=alice)
-    balance_recoverd = reward_token.balanceOf(diana, sender=alice)
-    assert amount == balance_recoverd
-
-def test_reward_manager_deposit_epoch(alice, bob, diana, reward_token, recovery_gauge, reward_manager):
-    amount = 10 ** 17
-    reward_manager.deposit_send_reward_token(recovery_gauge, amount, 8 * DAY, sender=bob)
-    assert recovery_gauge.recover_token(sender=alice)
-    balance_recoverd = reward_token.balanceOf(diana, sender=alice)
-    assert amount == balance_recoverd
-
 def test_reward_manager_sent_revert(alice, recovery_gauge, reward_manager):
     with ape.reverts("only reward managers can call this function"):
         reward_manager.send_reward_token(recovery_gauge, 10 ** 18, sender=alice)
@@ -72,18 +55,6 @@ def test_reward_manager_epoch_revert_too_short(bob, recovery_gauge, reward_manag
 def test_reward_manager_epoch_revert_too_long(bob, recovery_gauge, reward_manager):
     with ape.reverts("epoch duration must be between 3 days and a year"):
         reward_manager.send_reward_token(recovery_gauge, 10 ** 18, 53 * WEEK, sender=bob)
-
-def test_reward_manager_deposit_sent_revert(alice, recovery_gauge, reward_manager):
-    with ape.reverts("only reward managers can call this function"):
-        reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18, sender=alice)
-
-def test_reward_manager_deposit_epoch_revert_too_short(bob, recovery_gauge, reward_manager):
-    with ape.reverts("epoch duration must be between 3 days and a year"):
-        reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18, DAY, sender=bob)
-
-def test_reward_manager_deposit_epoch_revert_too_long(bob, recovery_gauge, reward_manager):
-    with ape.reverts("epoch duration must be between 3 days and a year"):
-        reward_manager.deposit_send_reward_token(recovery_gauge, 10 ** 18, 53 * WEEK, sender=bob)
 
 def test_recover_token(bob, charlie, diana, lost_token, reward_manager):
     amount = 10 ** 18
