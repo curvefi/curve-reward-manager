@@ -78,3 +78,9 @@ ape test
 4. Deploy the RewardManager
 5. Set RewardManager contract address and reward receiver address (gauge) for each SingleCampaign
 6. set desired reward epochs for each SingleCampaign
+
+
+
+## Passtrough 
+
+https://arbiscan.io/address/0xB1a17c8BCb17cd0FDAb587c6b09749b021861E70

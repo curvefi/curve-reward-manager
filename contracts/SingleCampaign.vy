@@ -24,7 +24,7 @@ have_rewards_started: public(bool)
 
 WEEK: public(constant(uint256)) = 7 * 24 * 60 * 60  # 1 week in seconds
 VERSION: public(constant(String[8])) = "0.9.0"
-DISTRIBUTION_BUFFER: public(constant(uint256)) = 2 * 60 * 60  # 2 hour window for early distribution
+DISTRIBUTION_BUFFER: public(constant(uint256)) = 2 * 60 * 60  # 2 hour window for early distribution, max divation is 2.7%
 
 # Events
 

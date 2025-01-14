@@ -1,5 +1,6 @@
 import os
 import click
+import time
 
 from ape import project
 
@@ -42,6 +43,8 @@ def deploy(network, provider, account):
 
     gauges.append(recovery_gauge)
     """
+    account.set_autosign(True)
+    
     gauges = GAUGE_ALLOWLIST.split(",")
     click.echo(gauges)
     managers = REWARD_MANAGERS.split(",")
@@ -77,9 +80,12 @@ def deploy_many_single_campaigns(ecosystem, network, provider, account):
 
     if ecosystem.name == 'arbitrum':
         max_fee = "10 gwei"
+        blockexplorer = "https://sepolia.arbiscan.io"
     else:
         max_fee = "0.1 gwei"
         print("Using max fee of 0.1 gwei")
+        blockexplorer = "https://taikoscan.io"
+
 
     for gauge in gauges:
         single_campaign = account.deploy(project.SingleCampaign, managers, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
@@ -89,12 +95,13 @@ def deploy_many_single_campaigns(ecosystem, network, provider, account):
         with open("single_campaign_contracts.log", "a+") as f:
             f.write(f"Single Campaign Contract: {single_campaign.address}\n")
             f.write(f"Deployed for gauge: {gauge}, but not yet set\n")
-            f.write(f"Link: https://sepolia.arbiscan.io/address{single_campaign.address}\n")
+            f.write(f"Link: {blockexplorer}/address/{single_campaign.address}\n")
             f.write(f"Single Campaign Contract List: {[str(contract) for contract in single_campaign_contracts]}\n")
+            f.write(f"{','.join(str(contract) for contract in single_campaign_contracts)}\n")
             f.write("-" * 80 + "\n")
 
         # Sleep for 1 second between deployments
-        import time
+     
         time.sleep(61)
 
     click.echo(single_campaign_contracts)
