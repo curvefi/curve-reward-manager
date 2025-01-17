@@ -78,7 +78,7 @@ ape test
 4. Deploy the RewardManager
 5. Set RewardManager contract address and reward receiver address (gauge) for each SingleCampaign
 6. set desired reward epochs for each SingleCampaign
-
+7. if the RewardManager has funds, call distribute_reward() can be called by anyone and the campaigne can be started 
 
 
 ## Passtrough 
