@@ -7,6 +7,7 @@ from ape import project
 from ape.cli import ConnectedProviderCommand, account_option
 
 REWARD_MANAGERS = os.getenv('REWARD_MANAGERS')
+REWARD_MANAGERS_AND_CAMPAIGNS = os.getenv('REWARD_MANAGERS_AND_CAMPAIGNS')
 REWARD_TOKEN = os.getenv('REWARD_TOKEN')
 RECOVERY_ADDRESS = os.getenv('RECOVERY_ADDRESS')
 # EXISTING_TEST_GAUGE = os.getenv('EXISTING_TEST_GAUGE')
@@ -44,10 +45,10 @@ def deploy(network, provider, account):
     gauges.append(recovery_gauge)
     """
     account.set_autosign(True)
-    
+
     gauges = GAUGE_ALLOWLIST.split(",")
     click.echo(gauges)
-    managers = REWARD_MANAGERS.split(",")
+    managers = REWARD_MANAGERS_AND_CAMPAIGNS.split(",")
     click.echo(managers)
 
     deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, RECOVERY_ADDRESS, max_priority_fee="10 wei", max_fee="0.1 gwei", gas_limit="400000")

@@ -95,24 +95,21 @@ def distribute_reward():
     """
     @notice Distribute rewards for the current epoch if conditions are met
     """
-    assert msg.sender in self.managers, "only managers can call this function"
+    # assert msg.sender in self.managers, "only managers can call this function"
     assert self.is_setup_complete, "Setup not completed"
     assert self.is_reward_epochs_set, "Reward epochs not set"
     assert len(self.reward_epochs) > 0, "No remaining reward epochs"
-    
-    # If this is the first distribution, set the start time
-    if not self.have_rewards_started:
-        self.last_reward_distribution_time = block.timestamp
-        self.have_rewards_started = True
-    else:
-        # Check if minimum time has passed since last distribution
+
+    # Check if minimum time has passed since last distribution if not first distribution
+    if self.have_rewards_started:
         assert block.timestamp + DISTRIBUTION_BUFFER >= self.last_reward_distribution_time + self.min_epoch_duration, "Minimum time between distributions not met"
     
     # Get the reward amount for the current epoch (last in array)  
     current_reward_amount: uint256 = self.reward_epochs.pop()
     
-    # Update last distribution time before external call
+    # Update last distribution time and mark rewards as started
     self.last_reward_distribution_time = block.timestamp
+    self.have_rewards_started = True
     
     # Call reward manager to send reward
     RewardManager(self.reward_manager_address).send_reward_token(self.receiving_gauge, current_reward_amount)

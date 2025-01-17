@@ -341,3 +341,33 @@ def test_distribution_buffer(chain, bob, charlie, reward_manager, test_gauge, si
         
     single_campaign.distribute_reward(sender=bob)  # Should succeed within buffer window
     
+
+def test_have_rewards_started(bob, charlie, reward_manager, single_campaign, test_gauge, chain):
+    """Test that have_rewards_started is properly set after first distribution"""
+    new_epochs = [1 * 10**18, 2 * 10**18]
+    min_epoch_duration = 4 * DAY
+    
+    # Setup campaign
+    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=bob)
+    
+    # Check initial state
+    assert not single_campaign.have_rewards_started()
+    
+    # First distribution
+    single_campaign.distribute_reward(sender=bob)
+    
+    # Verify have_rewards_started is now True
+    assert single_campaign.have_rewards_started()
+    
+    # Verify timing restrictions now apply
+    with ape.reverts("Minimum time between distributions not met"):
+        single_campaign.distribute_reward(sender=bob)
+        
+    # Move time forward past minimum epoch duration
+    chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration
+    chain.mine()
+
+    # Should now be able to distribute again
+    single_campaign.distribute_reward(sender=bob)
+
