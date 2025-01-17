@@ -4,10 +4,14 @@ import pytest
 DAY = 86400
 WEEK = 604800
 
-def test_initial_state(single_campaign):
+def test_initial_state(single_campaign, crvusd_token):
+    """Test initial state after deployment"""
     assert not single_campaign.is_setup_complete()
     assert not single_campaign.is_reward_epochs_set()
     assert single_campaign.get_number_of_remaining_epochs() == 0
+    assert single_campaign.min_epoch_duration() == WEEK
+    assert single_campaign.execute_reward_amount() == 10**18
+    assert single_campaign.crvusd_address() == crvusd_token.address
 
 def test_managers(bob, charlie, single_campaign):
     assert single_campaign.managers(0) == bob
@@ -36,23 +40,23 @@ def test_set_reward_manager_revert_already_set(bob, reward_manager, test_gauge, 
         single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=bob)
         
 def test_set_reward_epochs(charlie, single_campaign):
-    new_epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
+    epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
     
     # Set new reward epochs using manager account
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
     
-    assert single_campaign.get_number_of_remaining_epochs() == len(new_epochs)
+    assert single_campaign.get_number_of_remaining_epochs() == len(epochs)
     assert single_campaign.is_reward_epochs_set()
-    #assert single_campaign.reward_epochs() == new_epochs
+    #assert single_campaign.reward_epochs() == epochs
 
     get_all_epochs = single_campaign.get_all_epochs()
     print(get_all_epochs)
 
 def test_set_reward_epochs_revert_not_manager(alice, single_campaign):
-    new_epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
+    epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
     
     with ape.reverts("only managers can call this function"):
-        single_campaign.set_reward_epochs(new_epochs, sender=alice)
+        single_campaign.set_reward_epochs(epochs, sender=alice)
 
 def test_set_reward_epochs_revert_invalid_length(charlie, single_campaign):
     # Try to set 0 epochs
@@ -60,16 +64,16 @@ def test_set_reward_epochs_revert_invalid_length(charlie, single_campaign):
         single_campaign.set_reward_epochs([], sender=charlie)
     
     # Try to set more than 52 epochs
-    #new_epochs = [1 * 10**18] * 53
+    #epochs = [1 * 10**18] * 53
     #with ape.reverts("Must set between 1 and 52 epochs"):
-    #    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    #    single_campaign.set_reward_epochs(epochs, sender=charlie)
 
 def test_distribution_after_set_epochs(alice, bob, charlie, reward_manager, single_campaign, reward_token, test_gauge, chain):
-    new_epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
+    epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
     min_epoch_duration = 4 * DAY
     
     # Set new reward epochs
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
     
     # Setup the reward manager and receiver addresses with 3 day epoch duration
     single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=charlie)
@@ -104,10 +108,10 @@ def test_set_reward_manager_revert_not_owner(alice, reward_manager, test_gauge, 
 
 def test_distribution_order(alice, bob, charlie, reward_manager, single_campaign, reward_token, test_gauge, chain):
     # Setup the reward manager and receiver
-    new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
+    epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
     min_epoch_duration = 3 * DAY
     
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
     single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=charlie)
 
     # First distribution - should be 5 tokens
@@ -136,10 +140,10 @@ def test_distribution_order(alice, bob, charlie, reward_manager, single_campaign
 
 
 def test_distribution_timing(alice, bob, charlie, reward_manager, single_campaign, test_gauge, chain):
-    new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
+    epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
     min_epoch_duration = 3 * DAY
     DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
 
     # Setup the reward manager and receiver
     single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=charlie)
@@ -178,9 +182,9 @@ def test_distribute_revert_no_reward_manager(bob, single_campaign):
         single_campaign.distribute_reward(sender=bob)
 
 def test_distribute_revert_no_epochs(alice, bob, charlie, reward_manager, single_campaign, test_gauge, chain):
-    new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
+    epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
     min_epoch_duration = 3 * DAY
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
 
     # Setup the reward manager and receiver
     single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=charlie)
@@ -197,9 +201,9 @@ def test_distribute_revert_no_epochs(alice, bob, charlie, reward_manager, single
         single_campaign.distribute_reward(sender=bob)
 
 def test_get_next_epoch_info(alice, bob, charlie, reward_manager, single_campaign, test_gauge, chain):
-    new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
+    epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
     min_epoch_duration = 3 * DAY
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
 
     # Setup the reward manager and receiver
     single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=charlie)
@@ -218,8 +222,8 @@ def test_get_next_epoch_info(alice, bob, charlie, reward_manager, single_campaig
     assert time_until > 0  # Should have time restriction now
 
 def test_get_next_epoch_info_revert_no_epochs(alice, bob, charlie, reward_manager, single_campaign, test_gauge, chain):
-    new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
     min_epoch_duration = 3 * DAY
 
     # Setup the reward manager and receiver
@@ -237,9 +241,9 @@ def test_get_next_epoch_info_revert_no_epochs(alice, bob, charlie, reward_manage
         single_campaign.get_next_epoch_info()
 
 def test_remaining_epochs_count(alice, bob, charlie, reward_manager, single_campaign, test_gauge, chain):
-    new_epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
+    epochs = [2 * 10**18, 1 * 10**18, 5 * 10**18]
     min_epoch_duration = 4 * DAY
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
 
     # Setup the reward manager and receiver
     single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=charlie)
@@ -289,9 +293,9 @@ def test_distribution_respects_min_epoch_duration(bob, charlie, reward_manager, 
     # Setup with 4-day minimum duration
     custom_duration = 4 * DAY
     DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
-    new_epochs = [1 * 10**18, 2 * 10**18]
+    epochs = [1 * 10**18, 2 * 10**18]
     
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
     single_campaign.setup(reward_manager.address, test_gauge.address, custom_duration, sender=bob)
     
     # First distribution should work
@@ -316,8 +320,8 @@ def test_distribution_buffer(chain, bob, charlie, reward_manager, test_gauge, si
     WEEK = single_campaign.WEEK()  # Get constant from contract
     DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
 
-    new_epochs = [1 * 10**18, 2 * 10**18]
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    epochs = [1 * 10**18, 2 * 10**18]
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
     single_campaign.setup(reward_manager.address, test_gauge.address, WEEK, sender=bob)
     
     # First distribution should work
@@ -344,11 +348,11 @@ def test_distribution_buffer(chain, bob, charlie, reward_manager, test_gauge, si
 
 def test_have_rewards_started(bob, charlie, reward_manager, single_campaign, test_gauge, chain):
     """Test that have_rewards_started is properly set after first distribution"""
-    new_epochs = [1 * 10**18, 2 * 10**18]
+    epochs = [1 * 10**18, 2 * 10**18]
     min_epoch_duration = 4 * DAY
     
     # Setup campaign
-    single_campaign.set_reward_epochs(new_epochs, sender=charlie)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
     single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=bob)
     
     # Check initial state
@@ -371,3 +375,115 @@ def test_have_rewards_started(bob, charlie, reward_manager, single_campaign, tes
     # Should now be able to distribute again
     single_campaign.distribute_reward(sender=bob)
 
+def test_execution_allowed(bob, charlie, reward_manager, single_campaign, test_gauge, chain):
+    """Test execution_allowed under various conditions"""
+    epochs = [1 * 10**18, 2 * 10**18]
+    min_epoch_duration = 4 * DAY
+    DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
+    
+    # Should revert before setup
+    with ape.reverts("Setup not completed"):
+        single_campaign.execution_allowed()
+    
+    # Setup campaign
+    single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=bob)
+    
+    # Should revert before epochs are set
+    with ape.reverts("Reward epochs not set"):
+        single_campaign.execution_allowed()
+    
+    # Set reward epochs
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
+    
+    # Should be allowed before first distribution
+    assert single_campaign.execution_allowed()
+    
+    # First distribution
+    single_campaign.distribute_reward(sender=bob)
+    
+    # Should not be allowed immediately after distribution
+    assert not single_campaign.execution_allowed()
+    
+    # Should not be allowed just before buffer window
+    chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration - DISTRIBUTION_BUFFER - 2
+    chain.mine()
+    assert not single_campaign.execution_allowed()
+    
+    # Should be allowed within buffer window
+    chain.pending_timestamp = chain.pending_timestamp + DISTRIBUTION_BUFFER + 1
+    chain.mine()
+    assert single_campaign.execution_allowed()
+    
+    # Distribute all remaining epochs
+    single_campaign.distribute_reward(sender=bob)
+    
+    # Should revert when no epochs remain
+    with ape.reverts("No remaining reward epochs"):
+        single_campaign.execution_allowed()
+
+def test_execute(bob, charlie, reward_manager, single_campaign, test_gauge, chain, crvusd_token, reward_token):
+    """Test execute function under various conditions"""
+    epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
+    min_epoch_duration = 4 * DAY
+    execute_reward = single_campaign.execute_reward_amount()
+
+    # Setup campaign
+    single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=bob)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
+    
+    # Send crvUSD tokens to contract for execute rewards
+    transfer_amount = 4 * 10**18
+    crvusd_token.transfer(single_campaign.address, transfer_amount, sender=charlie)
+    
+    # First epoch
+    initial_balance = crvusd_token.balanceOf(charlie)
+    single_campaign.execute(sender=charlie)
+    assert crvusd_token.balanceOf(charlie) == initial_balance + execute_reward
+    
+    # Move forward to buffer window
+    chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration - single_campaign.DISTRIBUTION_BUFFER() + 2
+    chain.mine()
+    
+    # Second epoch
+    initial_balance = crvusd_token.balanceOf(charlie)
+    single_campaign.execute(sender=charlie)
+    assert crvusd_token.balanceOf(charlie) == initial_balance + execute_reward
+    
+    # Move forward for third epoch
+    chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration - single_campaign.DISTRIBUTION_BUFFER() + 2
+    chain.mine()
+    
+    # Third epoch
+    initial_balance = crvusd_token.balanceOf(charlie)
+    single_campaign.execute(sender=charlie)
+    assert crvusd_token.balanceOf(charlie) == initial_balance + execute_reward
+
+def test_execute_without_crvusd(bob, charlie, reward_manager, single_campaign, test_gauge, chain, crvusd_token):
+    """Test execute function fails when contract has no crvUSD"""
+    epochs = [1 * 10**18, 2 * 10**18]
+    min_epoch_duration = 4 * DAY
+    
+    # Setup campaign
+    single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=bob)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
+
+    # should work even if no crvUSD present
+    assert single_campaign.execute(sender=charlie)
+
+def test_execute_with_crvusd(bob, charlie, reward_manager, single_campaign, test_gauge, chain, crvusd_token):
+    """Test execute function works when contract has crvUSD"""
+    epochs = [1 * 10**18, 2 * 10**18]
+    min_epoch_duration = 4 * DAY
+    execute_reward = single_campaign.execute_reward_amount()
+    
+    # Send crvUSD tokens to contract for execute rewards
+    crvusd_token.transfer(single_campaign, 4 * 10**18, sender=charlie)
+    
+    # Setup and test execution
+    single_campaign.setup(reward_manager.address, test_gauge.address, min_epoch_duration, sender=bob)
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
+    
+    initial_balance = crvusd_token.balanceOf(charlie)
+    single_campaign.execute(sender=charlie)
+    assert crvusd_token.balanceOf(charlie) == initial_balance + execute_reward
+    

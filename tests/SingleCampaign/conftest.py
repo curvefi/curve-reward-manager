@@ -12,14 +12,14 @@ def reward_token(project, alice, bob):
     return reward_token
 
 @pytest.fixture(scope="module")
-def lost_token(project, alice, charlie):
-    lost_token = alice.deploy(project.TestToken)
+def crvusd_token(project, alice, charlie):
+    crvusd_token = alice.deploy(project.TestToken)
     # mint token to charlie
-    lost_token.mint(charlie, 10 ** 19, sender=alice)
-    lost_token.approve(charlie, 10 ** 19, sender=charlie)
-    balance = lost_token.balanceOf(charlie)
+    crvusd_token.mint(charlie, 10 ** 19, sender=alice)
+    crvusd_token.approve(charlie, 10 ** 19, sender=charlie)
+    balance = crvusd_token.balanceOf(charlie)
     print(balance)
-    return lost_token
+    return crvusd_token
 
 @pytest.fixture(scope="module")
 def test_gauge(project, alice, charlie, diana, reward_token):
@@ -29,9 +29,14 @@ def test_gauge(project, alice, charlie, diana, reward_token):
     return gauge
 
 @pytest.fixture(scope="module")
-def single_campaign(project, alice, bob, charlie):
+def single_campaign(project, alice, bob, charlie, crvusd_token):
     # Deploy with bob and charlie as managers
-    contract = alice.deploy(project.SingleCampaign, [bob, charlie])
+    # Add crvUSD token address and execute_reward_amount parameters 
+    execute_reward_amount = 10**18  # 1 token as reward
+    # Send crvUSD tokens to contract for execute rewards
+
+    contract = alice.deploy(project.SingleCampaign, [bob, charlie], crvusd_token, execute_reward_amount)
+
     return contract
 
 @pytest.fixture(scope="module")

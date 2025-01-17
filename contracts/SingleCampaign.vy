@@ -6,8 +6,14 @@
 @notice Distributes variable rewards for one gauge through RewardManager
 """
 
-interface RewardManager:
+from vyper.interfaces import ERC20
+
+interface IRewardManager:
     def send_reward_token(_receiving_gauge: address, _amount: uint256): nonpayable
+
+interface ISingleCampaign:
+    def execution_allowed() -> bool: view
+    def distribute_reward(): nonpayable
 
 # State Variables
 managers: public(DynArray[address, 3])  # Changed from owner to managers
@@ -21,6 +27,10 @@ is_reward_epochs_set: public(bool)
 reward_epochs: public(DynArray[uint256, 52])  # Storing reward amounts
 last_reward_distribution_time: public(uint256)
 have_rewards_started: public(bool)
+last_reward_amount: public(uint256)
+
+execute_reward_amount: public(uint256)
+crvusd_address: public(address)
 
 WEEK: public(constant(uint256)) = 7 * 24 * 60 * 60  # 1 week in seconds
 VERSION: public(constant(String[8])) = "0.9.0"
@@ -43,15 +53,28 @@ event RewardDistributed:
     remaining_reward_epochs: uint256
     timestamp: uint256
 
+event ExecuteRewardDistributed:
+    caller: address
+    epoch_number: uint256
+    reward_amount: uint256
+    reward_token: address
+    execute_reward_amount: uint256
+    timestamp: uint256
+
 
 @external
-def __init__(_managers: DynArray[address, 3]):
+def __init__(_managers: DynArray[address, 3], _crvusd_address: address, _execute_reward_amount: uint256):
     """
     @notice Initialize the contract with managers
     @param _managers List of manager addresses that can control the contract
+    @param _crvusd_address Address of the crvUSD token to be distributed to the caller
+    @param _execute_reward_amount Amount of crvUSD to be distributed to the caller
+    @dev min_epoch_duration reflects the old default in legacy gauge contracts
     """
     self.managers = _managers
     self.min_epoch_duration = WEEK
+    self.crvusd_address = _crvusd_address
+    self.execute_reward_amount = _execute_reward_amount
 
 @external
 def setup(_reward_manager_address: address, _receiving_gauge: address, _min_epoch_duration: uint256):
@@ -102,24 +125,71 @@ def distribute_reward():
 
     # Check if minimum time has passed since last distribution if not first distribution
     if self.have_rewards_started:
-        assert block.timestamp + DISTRIBUTION_BUFFER >= self.last_reward_distribution_time + self.min_epoch_duration, "Minimum time between distributions not met"
+        assert block.timestamp >= self.last_reward_distribution_time + self.min_epoch_duration - DISTRIBUTION_BUFFER, "Minimum time between distributions not met"
     
     # Get the reward amount for the current epoch (last in array)  
-    current_reward_amount: uint256 = self.reward_epochs.pop()
-    
+    reward_amount: uint256 = self.reward_epochs.pop()
     # Update last distribution time and mark rewards as started
     self.last_reward_distribution_time = block.timestamp
     self.have_rewards_started = True
     
     # Call reward manager to send reward
-    RewardManager(self.reward_manager_address).send_reward_token(self.receiving_gauge, current_reward_amount)
+    IRewardManager(self.reward_manager_address).send_reward_token(self.receiving_gauge, reward_amount)
+
+    self.last_reward_amount = reward_amount
     
     log RewardDistributed(
-        current_reward_amount,
+        reward_amount,
         len(self.reward_epochs),  # Remaining reward epochs
         block.timestamp
     )
+
+@external
+def execute():
+    """
+    @notice Execute the reward distribution
+    @dev no timestamp update needed as timestamp is updated in distribute_reward()
+    """
+    # Check if execution is allowed
+    assert ISingleCampaign(self).execution_allowed(), "Too early"
+
+    # Do the actual work here
+    ISingleCampaign(self).distribute_reward()
     
+    # Check if contract has enough crvUSD balance to pay reward
+    # Pay crvUSD reward to caller
+    if ERC20(self.crvusd_address).balanceOf(self) >= self.execute_reward_amount:
+        assert ERC20(self.crvusd_address).transfer(msg.sender, self.execute_reward_amount, default_return_value=True)
+
+    log ExecuteRewardDistributed(
+        msg.sender,
+        len(self.reward_epochs),
+        self.last_reward_amount,
+        self.crvusd_address,
+        self.execute_reward_amount,
+        block.timestamp
+    )
+
+@external
+@view
+def execution_allowed() -> bool:
+    """
+    @notice Check if execution is allowed
+    @return bool True if execution is allowed, False otherwise
+    """
+    assert self.is_setup_complete, "Setup not completed"
+    assert self.is_reward_epochs_set, "Reward epochs not set"
+    assert len(self.reward_epochs) > 0, "No remaining reward epochs"
+
+    # start execution is always possible if not started    
+    if not self.have_rewards_started:
+        return True
+    
+    # check if minimum time has passed since last distribution
+    if block.timestamp >= self.last_reward_distribution_time + self.min_epoch_duration - DISTRIBUTION_BUFFER:
+        return True
+    else: 
+        return False
 
 @external
 @view
