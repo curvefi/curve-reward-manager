@@ -16,7 +16,8 @@ REWARD_TOKEN_TESTNET = os.getenv('REWARD_TOKEN_TESTNET')
 GAUGE_ALLOWLIST = os.getenv('GAUGE_ALLOWLIST')
 
 DEPLOYED_REWARDMANAGER = os.getenv('DEPLOYED_REWARDMANAGER')
-
+CRVUSD_ADDRESS = os.getenv('CRVUSD_ADDRESS')
+EXECUTE_REWARD_AMOUNT = os.getenv('EXECUTE_REWARD_AMOUNT')
 @click.group()
 def cli():
     pass
@@ -60,7 +61,7 @@ cli.add_command(deploy)
 @account_option()
 def deploy_single_campaign(network, provider, account):
     managers = REWARD_MANAGERS.split(",")
-    single_campaign = account.deploy(project.SingleCampaign, managers, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
+    single_campaign = account.deploy(project.SingleCampaign, managers, CRVUSD_ADDRESS, EXECUTE_REWARD_AMOUNT, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
 
     click.echo(single_campaign)
 
