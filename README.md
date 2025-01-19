@@ -4,32 +4,34 @@ This Distributor allows to use deposit_reward_token() only on a preset of gauges
 
 The guard can decide on the time and on the size of the reward, but has no access to funds anytime.
 
-If set, a RecoveryGauge can be used to send back funds to a RecoveryAddress
+If a RecoveryAddress is set, the guard can be used to send back funds to a RecoveryAddress
+
+SingleCampaigns allows to set pre-defind reward epochs for on gauge over the Distributor.
+
+SingleCampaigns can be loaded with crvUSD which then pays out 1 crvUSD on execution of one of the epochs.
+
 
 # Flowchart
 
-## Deploy
+## Deploy Distributor
 
-[![](https://mermaid.ink/img/pako:eNp9UslugzAQ_RU0ZxJhGyj4UClppJ56SXMq5ODGUxIlGGSgLU3y73VYImib2rJmeeM3i-YIm0wicIhVokW-tVaLWFnmFNVr61hgfsjqFFXZApczI1HrRr0eeGm0xA-h5ZNQIhlDzECb7B11_SiqBIcQsSaT-5Ns-IqTYfkHYy2GSsbqR52j1F3Vw9oapgJLQzMnURdXcKvTHLvXyFVj61sEfaerbI-KW7Pl_GYoi5qOTabRBGyrEU4nSSdpJ_vUf3c64PndKRtkfyDXuc-k1FgUY97-gg0p6lTspFmF4yUkhnKLKcbAjSqF3sdmRc4mTlRl9lyrDfBSV2iDzqpkC_xNHApjVbkUJS52wpSaXr25UC9ZlvZfjAn8CJ_AJ5R4U48FPg1dPwzJnR_YUAOnxJ26jHoec8PQdQNCzzZ8NRRkyhhxHOJR8_zAd9zzN2UN2Qg?type=png)](https://mermaid.live/edit#pako:eNp9UslugzAQ_RU0ZxJhGyj4UClppJ56SXMq5ODGUxIlGGSgLU3y73VYImib2rJmeeM3i-YIm0wicIhVokW-tVaLWFnmFNVr61hgfsjqFFXZApczI1HrRr0eeGm0xA-h5ZNQIhlDzECb7B11_SiqBIcQsSaT-5Ns-IqTYfkHYy2GSsbqR52j1F3Vw9oapgJLQzMnURdXcKvTHLvXyFVj61sEfaerbI-KW7Pl_GYoi5qOTabRBGyrEU4nSSdpJ_vUf3c64PndKRtkfyDXuc-k1FgUY97-gg0p6lTspFmF4yUkhnKLKcbAjSqF3sdmRc4mTlRl9lyrDfBSV2iDzqpkC_xNHApjVbkUJS52wpSaXr25UC9ZlvZfjAn8CJ_AJ5R4U48FPg1dPwzJnR_YUAOnxJ26jHoec8PQdQNCzzZ8NRRkyhhxHOJR8_zAd9zzN2UN2Qg)
+
+[![](https://mermaid.ink/img/pako:eNp9UlFvgjAQ_ivkntHQMpD2YYmGxKdli_Np4EO1NyVKMQW2MfW_rwWWsWXah37tfXffXe96gk0hETikaqvFcecs41Q5ZpX1ujPEeDwUTY6q6gi7piTpzKhXAytN4qysdLauq-IX4ScL3BRvqJuplBrLckgSZzS6P8tWrzwblRuc33GoZKr-1vmTuq95WFmrU2JlRGYkmddCy5I7LXpuh6RHf3UtkJpnvBuPZbFHxZ3pYuaYZI9PdheqcSprvxrtJ3NRb9GmtWjTWiQ90h79GwL_d7HtBriQo85FJs0wT5ZIodphjilwc5RC71Mz5IvxE6ZHz43aAK90jS7oot7ugL-KQ2lu9VGKCuNMmLbm3y5HoV6KYngFfoIP4JNgTCMvJEFAmUcZoy40wKkxR_6dx5jPJlFIg4sLn228Nw6jwGNhFLIgiPyQEBdQZmZoD90_bL_j5QuuJci8?type=png)](https://mermaid.live/edit#pako:eNp9UlFvgjAQ_ivkntHQMpD2YYmGxKdli_Np4EO1NyVKMQW2MfW_rwWWsWXah37tfXffXe96gk0hETikaqvFcecs41Q5ZpX1ujPEeDwUTY6q6gi7piTpzKhXAytN4qysdLauq-IX4ScL3BRvqJuplBrLckgSZzS6P8tWrzwblRuc33GoZKr-1vmTuq95WFmrU2JlRGYkmddCy5I7LXpuh6RHf3UtkJpnvBuPZbFHxZ3pYuaYZI9PdheqcSprvxrtJ3NRb9GmtWjTWiQ90h79GwL_d7HtBriQo85FJs0wT5ZIodphjilwc5RC71Mz5IvxE6ZHz43aAK90jS7oot7ugL-KQ2lu9VGKCuNMmLbm3y5HoV6KYngFfoIP4JNgTCMvJEFAmUcZoy40wKkxR_6dx5jPJlFIg4sLn228Nw6jwGNhFLIgiPyQEBdQZmZoD90_bL_j5QuuJci8)
 ```
-
 graph TD
     subgraph Deployment
         A1[Deployer]
         A2[Distributor]
-        A3[RecoveryGauge]
+        A3[RecoveryAddress]
         A1 -->|deploys| A2
         A1 -->|deploys| A3
     end
 
     subgraph Distributor Deploy
         A2 -->|sets| B1[Guards: Guard0, Guard1, Guard3]
-        A2 -->|sets| B2[RewardToken: ARB]
-        A2 -->|sets| B3[Gauges: RecoveryGauge, Gauge0, Gauge1, Gauge2, Gauge3]
-    end
-
-    subgraph RecoveryGauge Deploy
-        A3 -->|sets| C1[RecoveryAddress]
+        A2 -->|sets| B2[RewardToken: ARB or OP or any token]
+        A2 -->|sets| B3[Gauges: Gauge0, Gauge1, Gauge2, Gauge3]
+        A2 -->|sets| B3[RecoveryAddress]
     end
 ```
 
@@ -54,10 +56,6 @@ graph TD
         E1 -->|sends ARB to| G1[RecoveryAddress]
     end
 ```
-
-## Origin
-
-Based on https://github.com/curvefi/curve-dao-contracts/blob/master/contracts/streamers/RewardStream.vy
 
 ## Install
 
