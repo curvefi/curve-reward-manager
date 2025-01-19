@@ -3,11 +3,12 @@ import click
 from ape import project
 from eth_abi import encode
 
-REWARD_MANAGERS = os.getenv('REWARD_MANAGERS')
-
+GUARDS = os.getenv('GUARDS')
+CRVUSD_ADDRESS = os.getenv('CRVUSD_ADDRESS')
+EXECUTE_REWARD_AMOUNT = os.getenv('EXECUTE_REWARD_AMOUNT')
 
 def get_constructor_args():
-    guards = REWARD_MANAGERS.split(",")
+    guards = GUARDS.split(",")
     print("Guards:", guards)
 
     # Get constructor ABI
@@ -15,7 +16,7 @@ def get_constructor_args():
 
     # Get the constructor input types
     input_types = [arg.type for arg in constructor.inputs]
-    constructor_args = [guards]
+    constructor_args = [guards, CRVUSD_ADDRESS, int(EXECUTE_REWARD_AMOUNT)]
 
     # Encode the arguments
     encoded_args = encode(input_types, constructor_args)

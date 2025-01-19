@@ -6,8 +6,8 @@ from ape import project
 
 from ape.cli import ConnectedProviderCommand, account_option
 
-REWARD_MANAGERS = os.getenv('REWARD_MANAGERS')
-REWARD_MANAGERS_AND_CAMPAIGNS = os.getenv('REWARD_MANAGERS_AND_CAMPAIGNS')
+GUARDS = os.getenv('GUARDS')
+GUARDS_AND_CAMPAIGNS = os.getenv('GUARDS_AND_CAMPAIGNS')
 REWARD_TOKEN = os.getenv('REWARD_TOKEN')
 RECOVERY_ADDRESS = os.getenv('RECOVERY_ADDRESS')
 # EXISTING_TEST_GAUGE = os.getenv('EXISTING_TEST_GAUGE')
@@ -15,7 +15,7 @@ RECOVERY_ADDRESS = os.getenv('RECOVERY_ADDRESS')
 REWARD_TOKEN_TESTNET = os.getenv('REWARD_TOKEN_TESTNET')
 GAUGE_ALLOWLIST = os.getenv('GAUGE_ALLOWLIST')
 
-DEPLOYED_REWARDMANAGER = os.getenv('DEPLOYED_REWARDMANAGER')
+DEPLOYED_DISTRIBUTOR = os.getenv('DEPLOYED_DISTRIBUTOR')
 CRVUSD_ADDRESS = os.getenv('CRVUSD_ADDRESS')
 EXECUTE_REWARD_AMOUNT = os.getenv('EXECUTE_REWARD_AMOUNT')
 @click.group()
@@ -49,7 +49,7 @@ def deploy(network, provider, account):
 
     gauges = GAUGE_ALLOWLIST.split(",")
     click.echo(gauges)
-    guards = REWARD_MANAGERS_AND_CAMPAIGNS.split(",")
+    guards = GUARDS_AND_CAMPAIGNS.split(",")
     click.echo(guards)
 
     deploy = account.deploy(project.Distributor, guards, REWARD_TOKEN, gauges, RECOVERY_ADDRESS, max_priority_fee="10 wei", max_fee="0.1 gwei", gas_limit="400000")
@@ -60,7 +60,7 @@ cli.add_command(deploy)
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
 def deploy_single_campaign(network, provider, account):
-    guards = REWARD_MANAGERS.split(",")
+    guards = GUARDS.split(",")
     single_campaign = account.deploy(project.SingleCampaign, guards, CRVUSD_ADDRESS, EXECUTE_REWARD_AMOUNT, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
 
     click.echo(single_campaign)
@@ -74,7 +74,7 @@ def deploy_many_single_campaigns(ecosystem, network, provider, account):
     account.set_autosign(True)
 
     gauges = GAUGE_ALLOWLIST.split(",")
-    guards = REWARD_MANAGERS.split(",")
+    guards = GUARDS.split(",")
     single_campaign_contracts = []
 
     click.echo(f"ecosystem: {ecosystem.name}")

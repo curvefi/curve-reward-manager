@@ -38,6 +38,10 @@ deploy_taiko:
 deploy_many_single_campaigns_taiko:
 	ape run scripts/deploy_manager.py deploy-many-single-campaigns --network taiko:mainnet:node
 
+setup_op_campaign:
+	ape run scripts/campaign_manager.py setup-op-campaign --network optimism:mainnet:node
+
+
 import_pvk:
 	ape accounts import arbideploy
 
