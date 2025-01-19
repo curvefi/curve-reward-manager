@@ -1,4 +1,4 @@
-#pragma version 0.3.10
+#pragma version ^0.4.0
 """
 @title Distributor
 @author martinkrung for curve.fi
@@ -6,7 +6,7 @@
 @notice reward guard contract who can deposit a fixed reward token to allowed gauges
 """
 
-from vyper.interfaces import ERC20
+from ethereum.ercs import IERC20
 
 interface LegacyGauge:
     def deposit_reward_token(_reward_token: address, _amount: uint256): nonpayable
@@ -15,7 +15,7 @@ interface Gauge:
     def deposit_reward_token(_reward_token: address, _amount: uint256, _epoch: uint256): nonpayable
 
 WEEK: constant(uint256) = 7 * 24 * 60 * 60  # 1 week in seconds
-VERSION: constant(String[8]) = "0.9.0"
+VERSION: constant(String[8]) = "0.9.1"
 
 guards: public(DynArray[address, 30])
 reward_token: public(address)
@@ -30,7 +30,7 @@ event SentRewardToken:
     timestamp: uint256
 
 
-@external
+@deploy
 def __init__(_guards: DynArray[address, 30], _reward_token: address, _receiving_gauges: DynArray[address, 20], _recovery_address: address):
     """
     @notice Contract constructor
@@ -54,14 +54,14 @@ def send_reward_token(_receiving_gauge: address, _amount: uint256, _epoch: uint2
     """
     assert msg.sender in self.guards, 'only reward guards can call this function'
     assert _receiving_gauge in self.receiving_gauges, 'only reward receiver which are allowed'
-    assert 3 * WEEK / 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
-    assert ERC20(self.reward_token).approve(_receiving_gauge, _amount, default_return_value=True)
+    assert 3 * WEEK // 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
+    assert extcall IERC20(self.reward_token).approve(_receiving_gauge, _amount, default_return_value=True)
     # legacy gauges have no epoch parameter 
     # new deposit_reward_token has epoch parameter default to WEEK
     if _epoch == WEEK:
-        LegacyGauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount)
+       extcall LegacyGauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount)
     else:
-        Gauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount, _epoch)
+       extcall Gauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount, _epoch)
 
     log SentRewardToken(_receiving_gauge, self.reward_token, _amount, _epoch, block.timestamp)
 
@@ -74,7 +74,7 @@ def recover_token(_token: address, _amount: uint256):
     assert msg.sender in self.guards, 'only reward guards can call this function'
     assert _amount > 0, 'amount must be greater than 0'
 
-    assert ERC20(_token).transfer(self.recovery_address, _amount, default_return_value=True)
+    assert extcall IERC20(_token).transfer(self.recovery_address, _amount, default_return_value=True)
 
 @external
 @view

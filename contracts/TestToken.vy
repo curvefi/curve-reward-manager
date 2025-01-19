@@ -1,14 +1,12 @@
-#pragma version 0.3.10
+#pragma version ^0.4.0
 # @dev Implementation of ERC-20 token standard.
 # @author Takayuki Jimba (@yudetamago)
 # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
 # https://github.com/vyperlang/vyper/blob/v0.3.10/examples/tokens/ERC20.vy
 
-from vyper.interfaces import ERC20
-from vyper.interfaces import ERC20Detailed
+from ethereum.ercs import IERC20
 
-implements: ERC20
-implements: ERC20Detailed
+VERSION: constant(String[8]) = "0.9.1"
 
 event Transfer:
     sender: indexed(address)
@@ -36,7 +34,7 @@ totalSupply: public(uint256)
 minter: address
 
 
-@external
+@deploy
 def __init__():
     # init_supply: uint256 = 1 * 10 ** 18
     init_supply: uint256 = 0

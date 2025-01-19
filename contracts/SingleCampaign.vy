@@ -1,4 +1,4 @@
-#pragma version 0.3.10
+#pragma version ^0.4.0
 """
 @title SingleCampaign
 @author martinkrung for curve.fi
@@ -6,7 +6,7 @@
 @notice Distributes variable rewards for one gauge through Distributor
 """
 
-from vyper.interfaces import ERC20
+from ethereum.ercs import IERC20
 
 interface IDistributor:
     def send_reward_token(_receiving_gauge: address, _amount: uint256): nonpayable
@@ -33,7 +33,7 @@ execute_reward_amount: public(uint256)
 crvusd_address: public(address)
 
 WEEK: public(constant(uint256)) = 7 * 24 * 60 * 60  # 1 week in seconds
-VERSION: public(constant(String[8])) = "0.9.0"
+VERSION: public(constant(String[8])) = "0.9.1"
 DISTRIBUTION_BUFFER: public(constant(uint256)) = 2 * 60 * 60  # 2 hour window for early distribution, max divation is 2.7%
 
 # Events
@@ -62,7 +62,7 @@ event ExecuteRewardDistributed:
     timestamp: uint256
 
 
-@external
+@deploy
 def __init__(_guards: DynArray[address, 3], _crvusd_address: address, _execute_reward_amount: uint256):
     """
     @notice Initialize the contract with guards
@@ -86,7 +86,7 @@ def setup(_distributor_address: address, _receiving_gauge: address, _min_epoch_d
     """
     assert msg.sender in self.guards, "only guards can call this function"
     assert not self.is_setup_complete, "Setup already completed"
-    assert 3 * WEEK / 7 <= _min_epoch_duration and _min_epoch_duration <= WEEK  * 4 * 12, 'epoch duration must be between 3 days and a year'
+    assert 3 * WEEK // 7 <= _min_epoch_duration and _min_epoch_duration <= WEEK  * 4 * 12, 'epoch duration must be between 3 days and a year'
     
     self.distributor_address = _distributor_address
     self.receiving_gauge = _receiving_gauge
@@ -110,7 +110,8 @@ def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]):
 
     # Store epochs in reverse order  
     n: uint256 = len(_reward_epochs)
-    for i in range(n, bound=52):
+
+    for i: uint256 in range(n, bound=52):
         self.reward_epochs.append(_reward_epochs[n - 1 - i])
 
     self.is_reward_epochs_set = True
@@ -139,7 +140,7 @@ def distribute_reward():
     self.have_rewards_started = True
     
     # Call reward guard to send reward
-    IDistributor(self.distributor_address).send_reward_token(self.receiving_gauge, reward_amount)
+    extcall IDistributor(self.distributor_address).send_reward_token(self.receiving_gauge, reward_amount)
 
     self.last_reward_amount = reward_amount
     
@@ -156,15 +157,15 @@ def execute():
     @dev no timestamp update needed as timestamp is updated in distribute_reward()
     """
     # Check if execution is allowed
-    assert ISingleCampaign(self).execution_allowed(), "Too early"
+    assert staticcall ISingleCampaign(self).execution_allowed(), "Too early"
 
     # Do the actual work here
-    ISingleCampaign(self).distribute_reward()
+    extcall ISingleCampaign(self).distribute_reward()
     
     # Check if contract has enough crvUSD balance to pay reward
     # Pay crvUSD reward to caller
-    if ERC20(self.crvusd_address).balanceOf(self) >= self.execute_reward_amount:
-        assert ERC20(self.crvusd_address).transfer(msg.sender, self.execute_reward_amount, default_return_value=True)
+    if staticcall IERC20(self.crvusd_address).balanceOf(self) >= self.execute_reward_amount:
+        assert extcall IERC20(self.crvusd_address).transfer(msg.sender, self.execute_reward_amount, default_return_value=True)
 
     log ExecuteRewardDistributed(
         msg.sender,
@@ -231,7 +232,7 @@ def get_all_epochs() -> DynArray[uint256, 52]:
     reward_epochs: DynArray[uint256, 52] = []
 
     n: uint256 = len(self.reward_epochs)
-    for i in range(n, bound=52):
+    for i: uint256 in range(n, bound=52):
         reward_epochs.append(self.reward_epochs[n - 1 - i])
 
     return reward_epochs

@@ -1,4 +1,4 @@
-# @version 0.3.10
+#pragma version ^0.4.0
 """
 @title TestGauge
 @author martinkrung for curve.fi
@@ -6,15 +6,15 @@
 @notice test gauge for testing
 """
 
-from vyper.interfaces import ERC20
+from ethereum.ercs import IERC20
 
 WEEK: constant(uint256) = 604800
-VERSION: constant(String[8]) = "1.0.0"
+VERSION: constant(String[8]) = "0.9.1"
 
 reward_token: public(address)
 recovery_address: public(address)
 
-@external
+@deploy
 def __init__(_reward_token: address,_recovery_address: address):
     """
     @notice Contract constructor
@@ -34,7 +34,7 @@ def deposit_reward_token(_reward_token: address, _amount: uint256, _epoch: uint2
     @param _epoch epoch duration, not used, in seconds, to make it compatible with the interface
     """
     
-    assert ERC20(self.reward_token).transferFrom(msg.sender, self, _amount, default_return_value=True)
+    assert extcall IERC20(self.reward_token).transferFrom(msg.sender, self, _amount, default_return_value=True)
 
 
 @external
@@ -43,9 +43,9 @@ def recover_token()->bool:
     @notice send recoverd token to predefined recovery address
     @dev anybody can call that function to recover token
     """
-    amount: uint256 = ERC20(self.reward_token).balanceOf(self)
+    amount: uint256 = staticcall IERC20(self.reward_token).balanceOf(self)
     if amount > 0:
-        assert ERC20(self.reward_token).transfer(self.recovery_address, amount)
+        assert extcall IERC20(self.reward_token).transfer(self.recovery_address, amount)
         return True
     else:
         return False
