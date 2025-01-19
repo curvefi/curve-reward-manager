@@ -27,7 +27,7 @@ def __init__(_reward_token: address,_recovery_address: address):
 @external
 def deposit_reward_token(_reward_token: address, _amount: uint256, _epoch: uint256 = WEEK):
     """
-    @notice send token from reward manager to this contract
+    @notice send token from reward guard to this contract
     @dev _reward_token token is not used, to make it compatible with the interface
     @param _reward_token reward token address
     @param _amount amount of reward token to deposit

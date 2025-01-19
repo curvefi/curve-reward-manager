@@ -49,10 +49,10 @@ def deploy(network, provider, account):
 
     gauges = GAUGE_ALLOWLIST.split(",")
     click.echo(gauges)
-    managers = REWARD_MANAGERS_AND_CAMPAIGNS.split(",")
-    click.echo(managers)
+    guards = REWARD_MANAGERS_AND_CAMPAIGNS.split(",")
+    click.echo(guards)
 
-    deploy = account.deploy(project.RewardManager, managers, REWARD_TOKEN, gauges, RECOVERY_ADDRESS, max_priority_fee="10 wei", max_fee="0.1 gwei", gas_limit="400000")
+    deploy = account.deploy(project.Distributor, guards, REWARD_TOKEN, gauges, RECOVERY_ADDRESS, max_priority_fee="10 wei", max_fee="0.1 gwei", gas_limit="400000")
 
 cli.add_command(deploy)
 
@@ -60,8 +60,8 @@ cli.add_command(deploy)
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
 def deploy_single_campaign(network, provider, account):
-    managers = REWARD_MANAGERS.split(",")
-    single_campaign = account.deploy(project.SingleCampaign, managers, CRVUSD_ADDRESS, EXECUTE_REWARD_AMOUNT, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
+    guards = REWARD_MANAGERS.split(",")
+    single_campaign = account.deploy(project.SingleCampaign, guards, CRVUSD_ADDRESS, EXECUTE_REWARD_AMOUNT, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
 
     click.echo(single_campaign)
 
@@ -74,7 +74,7 @@ def deploy_many_single_campaigns(ecosystem, network, provider, account):
     account.set_autosign(True)
 
     gauges = GAUGE_ALLOWLIST.split(",")
-    managers = REWARD_MANAGERS.split(",")
+    guards = REWARD_MANAGERS.split(",")
     single_campaign_contracts = []
 
     click.echo(f"ecosystem: {ecosystem.name}")
@@ -90,7 +90,7 @@ def deploy_many_single_campaigns(ecosystem, network, provider, account):
 
 
     for gauge in gauges:
-        single_campaign = account.deploy(project.SingleCampaign, managers, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
+        single_campaign = account.deploy(project.SingleCampaign, guards, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
         single_campaign_contracts.append(single_campaign)
 
         # Log contract address and transaction info

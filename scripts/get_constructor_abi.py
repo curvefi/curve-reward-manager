@@ -7,15 +7,15 @@ REWARD_MANAGERS = os.getenv('REWARD_MANAGERS')
 
 
 def get_constructor_args():
-    managers = REWARD_MANAGERS.split(",")
-    print("Managers:", managers)
+    guards = REWARD_MANAGERS.split(",")
+    print("Guards:", guards)
 
     # Get constructor ABI
     constructor = next(item for item in project.SingleCampaign.contract_type.abi if item.type == 'constructor')
 
     # Get the constructor input types
     input_types = [arg.type for arg in constructor.inputs]
-    constructor_args = [managers]
+    constructor_args = [guards]
 
     # Encode the arguments
     encoded_args = encode(input_types, constructor_args)

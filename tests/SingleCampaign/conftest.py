@@ -23,14 +23,14 @@ def crvusd_token(project, alice, charlie):
 
 @pytest.fixture(scope="module")
 def test_gauge(project, alice, charlie, diana, reward_token):
-    # bob manager address
+    # bob guard address
     # diana is recovery address
     gauge = alice.deploy(project.TestGauge, reward_token, diana)
     return gauge
 
 @pytest.fixture(scope="module")
 def single_campaign(project, alice, bob, charlie, crvusd_token):
-    # Deploy with bob and charlie as managers
+    # Deploy with bob and charlie as guards
     # Add crvUSD token address and execute_reward_amount parameters 
     execute_reward_amount = 10**18  # 1 token as reward
     # Send crvUSD tokens to contract for execute rewards
@@ -40,18 +40,18 @@ def single_campaign(project, alice, bob, charlie, crvusd_token):
     return contract
 
 @pytest.fixture(scope="module")
-def reward_manager(project, alice, bob, charlie, diana, reward_token, test_gauge, single_campaign):
-    # bob manager address
+def distributor(project, alice, bob, charlie, diana, reward_token, test_gauge, single_campaign):
+    # bob guard address
     # diana is recovery address
     print(single_campaign)
-    reward_manager_contract = alice.deploy(project.RewardManager, [bob, charlie, single_campaign], reward_token, [test_gauge], diana)
-    reward_token.approve(reward_manager_contract, 10 ** 19, sender=bob) 
-    print(reward_manager_contract)
+    distributor_contract = alice.deploy(project.Distributor, [bob, charlie, single_campaign], reward_token, [test_gauge], diana)
+    reward_token.approve(distributor_contract, 10 ** 19, sender=bob) 
+    print(distributor_contract)
 
     amount = 10 ** 19
-    reward_token.transfer(reward_manager_contract, amount, sender=bob)
+    reward_token.transfer(distributor_contract, amount, sender=bob)
  
-    return reward_manager_contract
+    return distributor_contract
 
 
 

@@ -2,7 +2,7 @@ arbitrum:mainnet:
   campaign-1: 
     name: leveraged-lending-markets
     date: 2024-06-14
-    RewardManager:
+    Distributor:
       address: 0xa7808B10367E6a88a8334a51De9bfE5aF4C0B7D5
       explorer: https://arbiscan.io/address/0xa7808B10367E6a88a8334a51De9bfE5aF4C0B7D5#code
     RecoveryGauge: 
@@ -15,7 +15,7 @@ arbitrum:mainnet:
   campaign-2: 
     name: leveraged-lending-markets-with-pools
     date: 2024-08-13
-    RewardManager:
+    Distributor:
       address: 0x2700992F2601b756185F0430E859D5fd4E0a9cDb
       explorer: https://arbiscan.io/address/0x2700992F2601b756185F0430E859D5fd4E0a9cDb#code
     RecoveryGauge: 
@@ -28,7 +28,7 @@ arbitrum:mainnet:
   campaign-3: 
     name: leveraged-lending-markets-with-pools_dlcbtc
     date: 2024-08-20
-    RewardManager:
+    Distributor:
       address: 0x4259F04C42a2CEB0183C35B239C5C5BF6570b1C4
       explorer: https://arbiscan.io/address/0x4259F04C42a2CEB0183C35B239C5C5BF6570b1C4#code
     RecoveryGauge: 

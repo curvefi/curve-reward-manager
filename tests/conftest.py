@@ -6,13 +6,13 @@ def alice(accounts):
     return accounts[0]
 
 @pytest.fixture(scope="session")
-# manager address
+# guard address
 def bob(accounts):
     return accounts[1]
 
 @pytest.fixture(scope="session")
-# charlie is backup manager address
-# charlie is sends wrong token to reward manager
+# charlie is backup guard address
+# charlie is sends wrong token to reward guard
 def charlie(accounts):
     return accounts[2]
 

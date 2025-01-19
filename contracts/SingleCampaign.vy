@@ -3,12 +3,12 @@
 @title SingleCampaign
 @author martinkrung for curve.fi
 @license MIT
-@notice Distributes variable rewards for one gauge through RewardManager
+@notice Distributes variable rewards for one gauge through Distributor
 """
 
 from vyper.interfaces import ERC20
 
-interface IRewardManager:
+interface IDistributor:
     def send_reward_token(_receiving_gauge: address, _amount: uint256): nonpayable
 
 interface ISingleCampaign:
@@ -16,8 +16,8 @@ interface ISingleCampaign:
     def distribute_reward(): nonpayable
 
 # State Variables
-managers: public(DynArray[address, 3])  # Changed from owner to managers
-reward_manager_address: public(address)
+guards: public(DynArray[address, 3])  # Changed from owner to guards
+distributor_address: public(address)
 receiving_gauge: public(address)
 min_epoch_duration: public(uint256)
 
@@ -39,7 +39,7 @@ DISTRIBUTION_BUFFER: public(constant(uint256)) = 2 * 60 * 60  # 2 hour window fo
 # Events
 
 event SetupCompleted:
-    reward_manager_address: address
+    distributor_address: address
     receiving_gauge: address
     min_epoch_duration: uint256
     timestamp: uint256
@@ -65,36 +65,36 @@ event ExecuteRewardDistributed:
 @external
 def __init__(_managers: DynArray[address, 3], _crvusd_address: address, _execute_reward_amount: uint256):
     """
-    @notice Initialize the contract with managers
-    @param _managers List of manager addresses that can control the contract
+    @notice Initialize the contract with guards
+    @param _managers List of guard addresses that can control the contract
     @param _crvusd_address Address of the crvUSD token to be distributed to the caller
     @param _execute_reward_amount Amount of crvUSD to be distributed to the caller
     @dev min_epoch_duration reflects the old default in legacy gauge contracts
     """
-    self.managers = _managers
+    self.guards = _managers
     self.min_epoch_duration = WEEK
     self.crvusd_address = _crvusd_address
     self.execute_reward_amount = _execute_reward_amount
 
 @external
-def setup(_reward_manager_address: address, _receiving_gauge: address, _min_epoch_duration: uint256):
+def setup(_distributor_address: address, _receiving_gauge: address, _min_epoch_duration: uint256):
     """
-    @notice Set the reward manager and receiver addresses (can only be set once)
-    @param _reward_manager_address Address of the RewardManager contract
+    @notice Set the reward guard and receiver addresses (can only be set once)
+    @param _distributor_address Address of the Distributor contract
     @param _receiving_gauge Address of the RewardReceiver contract
     @param _min_epoch_duration Minimum epoch duration in seconds
     """
-    assert msg.sender in self.managers, "only managers can call this function"
+    assert msg.sender in self.guards, "only guards can call this function"
     assert not self.is_setup_complete, "Setup already completed"
     assert 3 * WEEK / 7 <= _min_epoch_duration and _min_epoch_duration <= WEEK  * 4 * 12, 'epoch duration must be between 3 days and a year'
     
-    self.reward_manager_address = _reward_manager_address
+    self.distributor_address = _distributor_address
     self.receiving_gauge = _receiving_gauge
     self.min_epoch_duration = _min_epoch_duration
 
     self.is_setup_complete = True
 
-    log SetupCompleted(_reward_manager_address, _receiving_gauge, _min_epoch_duration, block.timestamp)
+    log SetupCompleted(_distributor_address, _receiving_gauge, _min_epoch_duration, block.timestamp)
 
 
 @external
@@ -103,7 +103,7 @@ def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]):
     @notice  Set the reward epochs in reverse order: last value is the first to be distributed, first value is the last to be distributed
     @param _reward_epochs List of reward amounts ordered from first to last epoch
     """
-    assert msg.sender in self.managers, "only managers can call this function"
+    assert msg.sender in self.guards, "only guards can call this function"
     assert not self.is_reward_epochs_set, "Reward epochs can only be set once"
     assert len(_reward_epochs) > 0 and len(_reward_epochs) <= 52, "Must set between 1 and 52 epochs"
     
@@ -118,7 +118,7 @@ def distribute_reward():
     """
     @notice Distribute rewards for the current epoch if conditions are met
     """
-    # assert msg.sender in self.managers, "only managers can call this function"
+    # assert msg.sender in self.guards, "only guards can call this function"
     assert self.is_setup_complete, "Setup not completed"
     assert self.is_reward_epochs_set, "Reward epochs not set"
     assert len(self.reward_epochs) > 0, "No remaining reward epochs"
@@ -133,8 +133,8 @@ def distribute_reward():
     self.last_reward_distribution_time = block.timestamp
     self.have_rewards_started = True
     
-    # Call reward manager to send reward
-    IRewardManager(self.reward_manager_address).send_reward_token(self.receiving_gauge, reward_amount)
+    # Call reward guard to send reward
+    IDistributor(self.distributor_address).send_reward_token(self.receiving_gauge, reward_amount)
 
     self.last_reward_amount = reward_amount
     
@@ -227,10 +227,10 @@ def get_all_epochs() -> DynArray[uint256, 52]:
 @view
 def get_all_managers() -> DynArray[address, 3]:
     """
-    @notice Get all managers
-    @return DynArray[address, 3] Array containing all managers
+    @notice Get all guards
+    @return DynArray[address, 3] Array containing all guards
     """
-    return self.managers
+    return self.guards
 
 @external
 @view
