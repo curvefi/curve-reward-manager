@@ -52,7 +52,20 @@ def test_set_reward_epochs(charlie, single_campaign):
     get_all_epochs = single_campaign.get_all_epochs()
     print(get_all_epochs)
 
-def test_set_reward_epochs_revert_not_manager(alice, single_campaign):
+def test_set_reward_only_one_epoch(charlie, single_campaign):
+    epochs = [3 * 10**18]
+    
+    # Set new reward epochs using guard account
+    single_campaign.set_reward_epochs(epochs, sender=charlie)
+    
+    assert single_campaign.get_number_of_remaining_epochs() == len(epochs)
+    assert single_campaign.is_reward_epochs_set()
+
+    get_all_epochs = single_campaign.get_all_epochs()
+    print(get_all_epochs)
+
+
+def test_set_reward_epochs_revert_not_guard(alice, single_campaign):
     epochs = [1 * 10**18, 2 * 10**18, 3 * 10**18]
     
     with ape.reverts("only guards can call this function"):
@@ -78,11 +91,11 @@ def test_distribution_after_set_epochs(alice, bob, charlie, distributor, single_
     # Setup the reward guard and receiver addresses with 3 day epoch duration
     single_campaign.setup(distributor.address, test_gauge.address, min_epoch_duration, sender=charlie)
 
-    # First distribution - should be 3 tokens
+    # First distribution - should be 1 tokens
     single_campaign.distribute_reward(sender=bob)
 
     assert single_campaign.get_number_of_remaining_epochs() == 2
-    assert reward_token.balanceOf(test_gauge) == 3 * 10**18
+    assert reward_token.balanceOf(test_gauge) == 1 * 10**18
 
     # Move time forward one week
     chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration
@@ -91,7 +104,7 @@ def test_distribution_after_set_epochs(alice, bob, charlie, distributor, single_
     # Second distribution - should be 2 tokens
     single_campaign.distribute_reward(sender=bob)
     assert single_campaign.get_number_of_remaining_epochs() == 1
-    assert reward_token.balanceOf(test_gauge) == 5 * 10**18
+    assert reward_token.balanceOf(test_gauge) == 3 * 10**18
     
     # Move time forward one week
     chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration
@@ -114,11 +127,11 @@ def test_distribution_order(alice, bob, charlie, distributor, single_campaign, r
     single_campaign.set_reward_epochs(epochs, sender=charlie)
     single_campaign.setup(distributor.address, test_gauge.address, min_epoch_duration, sender=charlie)
 
-    # First distribution - should be 5 tokens
+    # First distribution - should be 2 tokens
     single_campaign.distribute_reward(sender=bob)
 
     assert single_campaign.get_number_of_remaining_epochs() == 2
-    assert reward_token.balanceOf(test_gauge) == 5 * 10**18
+    assert reward_token.balanceOf(test_gauge) == 2 * 10**18
 
     # Move time forward one week
     chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration
@@ -127,7 +140,7 @@ def test_distribution_order(alice, bob, charlie, distributor, single_campaign, r
     # Second distribution - should be 1 tokens
     single_campaign.distribute_reward(sender=bob)
     assert single_campaign.get_number_of_remaining_epochs() == 1
-    assert reward_token.balanceOf(test_gauge) == 6 * 10**18
+    assert reward_token.balanceOf(test_gauge) == 3 * 10**18
     
     # Move time forward one week
     chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration
@@ -210,7 +223,7 @@ def test_get_next_epoch_info(alice, bob, charlie, distributor, single_campaign, 
 
     # Check initial next epoch
     amount, time_until = single_campaign.get_next_epoch_info()
-    assert amount == 5 * 10**18  # First epoch amount
+    assert amount == 2 * 10**18  # First epoch amount
     assert time_until == 0  # No time restriction for first distribution
     
     # Distribute first epoch
@@ -219,6 +232,17 @@ def test_get_next_epoch_info(alice, bob, charlie, distributor, single_campaign, 
     # Check second epoch info
     amount, time_until = single_campaign.get_next_epoch_info()
     assert amount == 1 * 10**18  # Second epoch amount
+    assert time_until > 0  # Should have time restriction now
+
+    chain.pending_timestamp = chain.pending_timestamp + min_epoch_duration
+    chain.mine()
+
+    # Distribute second epoch
+    single_campaign.distribute_reward(sender=bob)
+    
+    # Check third epoch info
+    amount, time_until = single_campaign.get_next_epoch_info()
+    assert amount == 5 * 10**18  # Third epoch amount
     assert time_until > 0  # Should have time restriction now
 
 def test_get_next_epoch_info_revert_no_epochs(alice, bob, charlie, distributor, single_campaign, test_gauge, chain):
@@ -340,7 +364,7 @@ def test_distribution_buffer(chain, bob, charlie, distributor, test_gauge, singl
 
     # Verify we can get next epoch info
     next_amount, seconds_until_next = single_campaign.get_next_epoch_info()
-    assert next_amount == 1 * 10**18
+    assert next_amount == 2 * 10**18
     assert seconds_until_next > 0  # Should have some time until next distribution
         
     single_campaign.distribute_reward(sender=bob)  # Should succeed within buffer window

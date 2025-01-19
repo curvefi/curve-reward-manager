@@ -63,15 +63,15 @@ event ExecuteRewardDistributed:
 
 
 @external
-def __init__(_managers: DynArray[address, 3], _crvusd_address: address, _execute_reward_amount: uint256):
+def __init__(_guards: DynArray[address, 3], _crvusd_address: address, _execute_reward_amount: uint256):
     """
     @notice Initialize the contract with guards
-    @param _managers List of guard addresses that can control the contract
+    @param _guards List of guard addresses that can control the contract
     @param _crvusd_address Address of the crvUSD token to be distributed to the caller
     @param _execute_reward_amount Amount of crvUSD to be distributed to the caller
     @dev min_epoch_duration reflects the old default in legacy gauge contracts
     """
-    self.guards = _managers
+    self.guards = _guards
     self.min_epoch_duration = WEEK
     self.crvusd_address = _crvusd_address
     self.execute_reward_amount = _execute_reward_amount
@@ -102,12 +102,17 @@ def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]):
     """
     @notice  Set the reward epochs in reverse order: last value is the first to be distributed, first value is the last to be distributed
     @param _reward_epochs List of reward amounts ordered from first to last epoch
+    @dev Be aware that internal storage is reversed, to use pop() to get the next epoch
     """
     assert msg.sender in self.guards, "only guards can call this function"
     assert not self.is_reward_epochs_set, "Reward epochs can only be set once"
     assert len(_reward_epochs) > 0 and len(_reward_epochs) <= 52, "Must set between 1 and 52 epochs"
-    
-    self.reward_epochs = _reward_epochs
+
+    # Store epochs in reverse order  
+    n: uint256 = len(_reward_epochs)
+    for i in range(n, bound=52):
+        self.reward_epochs.append(_reward_epochs[n - 1 - i])
+
     self.is_reward_epochs_set = True
 
     log RewardEpochsSet(_reward_epochs, block.timestamp)    
@@ -127,8 +132,8 @@ def distribute_reward():
     if self.have_rewards_started:
         assert block.timestamp >= self.last_reward_distribution_time + self.min_epoch_duration - DISTRIBUTION_BUFFER, "Minimum time between distributions not met"
     
-    # Get the reward amount for the current epoch (last in array)  
     reward_amount: uint256 = self.reward_epochs.pop()
+    
     # Update last distribution time and mark rewards as started
     self.last_reward_distribution_time = block.timestamp
     self.have_rewards_started = True
@@ -220,12 +225,20 @@ def get_all_epochs() -> DynArray[uint256, 52]:
     """
     @notice Get all remaining reward epochs
     @return DynArray[uint256, 52] Array containing all remaining reward epoch amounts
+    @dev returns the epochs list as the same order as they are set in set_reward_epochs()
+    @dev Be aware that internal storage is reversed, to use pop() to get the next epoch
     """
-    return self.reward_epochs
+    reward_epochs: DynArray[uint256, 52] = []
+
+    n: uint256 = len(self.reward_epochs)
+    for i in range(n, bound=52):
+        reward_epochs.append(self.reward_epochs[n - 1 - i])
+
+    return reward_epochs
 
 @external
 @view
-def get_all_managers() -> DynArray[address, 3]:
+def get_all_guards() -> DynArray[address, 3]:
     """
     @notice Get all guards
     @return DynArray[address, 3] Array containing all guards
