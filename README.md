@@ -35,26 +35,23 @@ graph TD
     end
 ```
 
-## Interaction
+## Interaction with Distributor
 
-[![](https://mermaid.ink/img/pako:eNqVUstu2zAQ_JXFHooUkB1Tr1o6FHDhNOihF7WniIbBirRsOCIFkmrrWv73UI_G8i2hIIC7nBnNrHjGQnGBKZaa1Xv4uaYS3DLNr6HxTVqhWWEPSkIm_jDNvzPJSqHhg6sL9Vvo0yNrSjHwurUm-YjZTJp-fkOfHhGYzT63FLmolTnYre6BW6uOQt6VnbgHrFKNtB8ptk5qKjtyd0p3JAOr7AvstKpg_BBFaOGB5DdmN_BuiYzkPXVxT-79t7rfdjLbQknbzfBtWcAIOTVxM7YuynsZGZmkzQa7PbgxggMzMDhu4YnkxrKjaz7Xrwmv1K8kX8mTkmIz7Y3p9TDeuz7V1OPDgLhatKqFx-v_WHGuhTGjpkNR2T3oYSV0xQ7c3c1zd0jR7kUlKKZuy5k-UqTy4nCsserHSRaYWt0ID7Vqyj2mO_ZsXNXUnFmxPjB3n6vXbs3kk1LVf4orMT3jX0xnPonmUbCM_SSMk4R8ipcenjD1STgPAz-KgjBJwnBJ_IuH_3oJMg8CsliQyHdvvIwX4eUFU3sDFg?type=png)](https://mermaid.live/edit#pako:eNqVUstu2zAQ_JXFHooUkB1Tr1o6FHDhNOihF7WniIbBirRsOCIFkmrrWv73UI_G8i2hIIC7nBnNrHjGQnGBKZaa1Xv4uaYS3DLNr6HxTVqhWWEPSkIm_jDNvzPJSqHhg6sL9Vvo0yNrSjHwurUm-YjZTJp-fkOfHhGYzT63FLmolTnYre6BW6uOQt6VnbgHrFKNtB8ptk5qKjtyd0p3JAOr7AvstKpg_BBFaOGB5DdmN_BuiYzkPXVxT-79t7rfdjLbQknbzfBtWcAIOTVxM7YuynsZGZmkzQa7PbgxggMzMDhu4YnkxrKjaz7Xrwmv1K8kX8mTkmIz7Y3p9TDeuz7V1OPDgLhatKqFx-v_WHGuhTGjpkNR2T3oYSV0xQ7c3c1zd0jR7kUlKKZuy5k-UqTy4nCsserHSRaYWt0ID7Vqyj2mO_ZsXNXUnFmxPjB3n6vXbs3kk1LVf4orMT3jX0xnPonmUbCM_SSMk4R8ipcenjD1STgPAz-KgjBJwnBJ_IuH_3oJMg8CsliQyHdvvIwX4eUFU3sDFg)
+[![](https://mermaid.ink/img/pako:eNp1Uu9r2zAQ_VeO-zA6cNPITuzaHwalNmVsbMMtDBqNolqKY1JLRj-2pXH-98l11rpl0yfd3XtP7-60x0pxgRnWmnUbuMmpBH-Mux8TH6UVmlW2URLyxljd3DurNLyDUlTqp9C7C861MGbkDScnqyvHNAcPu25k_SAuWduxppZwqaQd1H5M0OFqojstEDg9_dBTNELyOy1-eck7q7ZCntTM1SIA1ionbQCiU9XmPcXei02Fj_y10gPXQFl8vyhzuPn6qfgCsNaqnbZEEXoovfdBfH5GzsKJmXI081rCGcGBGRi9mR5uycpYtvXZz9-eyf_oSI-jO3Zz8mS9IC_AgvxnJsWoMEzkbTtW9XBFVm-2cuR6PJVUYoCt0C1ruF_4fihRtBvRCoqZv3KmtxSpPHgc8y9f72SFmdVOBKiVqzeYrdmD8ZHrOLMib5j_JO1ztmPyVqn2L8WHmO3xN2YkDmfncXyeLtIkWoSLJA5wh1m0iGZLEqVpmpAwmYfxIcDHJ4H5bJlEaRyGvkCiZUSWhz8WSM99?type=png)](https://mermaid.live/edit#pako:eNp1Uu9r2zAQ_VeO-zA6cNPITuzaHwalNmVsbMMtDBqNolqKY1JLRj-2pXH-98l11rpl0yfd3XtP7-60x0pxgRnWmnUbuMmpBH-Mux8TH6UVmlW2URLyxljd3DurNLyDUlTqp9C7C861MGbkDScnqyvHNAcPu25k_SAuWduxppZwqaQd1H5M0OFqojstEDg9_dBTNELyOy1-eck7q7ZCntTM1SIA1ionbQCiU9XmPcXei02Fj_y10gPXQFl8vyhzuPn6qfgCsNaqnbZEEXoovfdBfH5GzsKJmXI081rCGcGBGRi9mR5uycpYtvXZz9-eyf_oSI-jO3Zz8mS9IC_AgvxnJsWoMEzkbTtW9XBFVm-2cuR6PJVUYoCt0C1ruF_4fihRtBvRCoqZv3KmtxSpPHgc8y9f72SFmdVOBKiVqzeYrdmD8ZHrOLMib5j_JO1ztmPyVqn2L8WHmO3xN2YkDmfncXyeLtIkWoSLJA5wh1m0iGZLEqVpmpAwmYfxIcDHJ4H5bJlEaRyGvkCiZUSWhz8WSM99)
 
 ```graph TD
-    subgraph Interaction Distributor & RecoveryGauge
-        D1[Guard]
+    subgraph Interaction Distributor & RecoveryAddress
+        D1[Guard or SingleCampaign Contract]
         D2[Distributor]
-        D1 -->|"deposit_reward_token(gauge, amount)"| D2
-        D2 -->|"forwards ARB from Distributor" | E1[RecoveryGauge] 
-        D2 -->|"forwards ARB from Distributor" | R1[Gauge0/1/2]
-        D1 -->|"deposit_reward_token_from_contract(gauge, amount)"| D2
-        D2 -->| sends ARB from Distributor| E1
-        D2 -->| sends ARB from Distributor| R1 
-        R1 -->| ARB used as reward| Z1[staked lp]
+        D1 -->|"send_reward_token(gauge, amount, epoch)"| D2
+        D2 -->|"forwards REWARD TOKEN  from Distributor" | R1[Gauge0/1/2]
+        R1 -->| REWARD TOKEN used as rewards| Z1[staked LP]
       
-        F1[Anyone]
-        F1 -->|"recover()"| E1
-        E1 -->|sends ARB to| G1[RecoveryAddress]
+        D1 -->|"recover_token(()"| E1
+        E1[Distributor]
+        E1 -->|sends REWARD TOKEN  to| G1[RecoveryAddress]
     end
+
 ```
 
 ## Install
