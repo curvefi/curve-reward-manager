@@ -54,6 +54,27 @@ graph TD
 
 ```
 
+## Interaction with SingleCampaign
+
+[![](https://mermaid.ink/img/pako:eNptkslu2zAQhl9lMCcbUAzttgUkQFA1Qc_JqZYhMNJEIiKRApemruN3LyU7iYKWJ872zT9DHrGSNWGGjWJDC495IcAdbZ_Ojh_CkGKV4VLAAxdNR99YPzDeiHPiePJgd2-ZqvdzF1xd3bwVqMnYYVFzbRR_skaqktW1Iq09UFQR_-WYZcNsQx70XJQ0yKota6vY2HJZ4Bvk4Ywb7rguJ2hZyX7oyND1o7Lkev-_e6no1Wk7g_Xii7UEpqFz2uCVmxaMfCEBrJdWGHiWCohVLUypBYITEs1aRKOQL7RRFlzDP2q-B7tbcZCC9nPfReHHZugCWyymoe-Cz-S7YJd_LnA_D1woFes6DZpE_S5pmmWxBPdsMCse0ffuucaFX0CuaFSLHvakesZr9xmOY6hA01JPBWbuWjP1UmAhTi6POdLDQVSYGTerh0rapsXsmXXaWXaomaGcM_eB-g_vwMRPKfv3EmdidsTfmMXpKkrS9cbfhJs4DZPQwwNmoR-t1kmcxn4ShEm8TdYnD_9MAH-1TqNtHG0Sf7uNg-D0F1eU4F0?type=png)](https://mermaid.live/edit#pako:eNptkslu2zAQhl9lMCcbUAzttgUkQFA1Qc_JqZYhMNJEIiKRApemruN3LyU7iYKWJ872zT9DHrGSNWGGjWJDC495IcAdbZ_Ojh_CkGKV4VLAAxdNR99YPzDeiHPiePJgd2-ZqvdzF1xd3bwVqMnYYVFzbRR_skaqktW1Iq09UFQR_-WYZcNsQx70XJQ0yKota6vY2HJZ4Bvk4Ywb7rguJ2hZyX7oyND1o7Lkev-_e6no1Wk7g_Xii7UEpqFz2uCVmxaMfCEBrJdWGHiWCohVLUypBYITEs1aRKOQL7RRFlzDP2q-B7tbcZCC9nPfReHHZugCWyymoe-Cz-S7YJd_LnA_D1woFes6DZpE_S5pmmWxBPdsMCse0ffuucaFX0CuaFSLHvakesZr9xmOY6hA01JPBWbuWjP1UmAhTi6POdLDQVSYGTerh0rapsXsmXXaWXaomaGcM_eB-g_vwMRPKfv3EmdidsTfmMXpKkrS9cbfhJs4DZPQwwNmoR-t1kmcxn4ShEm8TdYnD_9MAH-1TqNtHG0Sf7uNg-D0F1eU4F0)
+
+graph TD
+    subgraph Interaction SingleCampaign
+        D1[Guard]
+        D1 -->|"setup(distributor_address, receiving_gauge, min_epoch_duration)"| D2
+        D2[is_setup_complete=True]
+
+        D1 -->|"set_reward_epochs(reward_epochs) as list with token amount for each epoch" | D3
+        D3[is_reward_epochs_set = True]
+
+        E1[Anyone]
+        E1 -->|"distribute_reward(()"| F1
+        F1[Distributor]
+        F1 -->|"calls send_reward_token() on  Distributor"| G1[Gauge]
+    end
+
+
+
 ## Install
 
 ```

@@ -2,6 +2,7 @@
 .venv
 .env_*
 .env
+.cursorules
 venv
 __pycache__
 build/
