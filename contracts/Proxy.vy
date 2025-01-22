@@ -11,6 +11,14 @@ event NewProxy:
     implementation: address
     timestamp: uint256
 
+event MultipleNewProxy:
+    proxies: DynArray[address, 27]
+    implementation: address
+    timestamp: uint256
+
+interface ISProxy:
+    def deploy_proxy(implementation: address) -> address: nonpayable
+
 
 @external
 def deploy_proxy(implementation: address) -> address:
@@ -20,3 +28,15 @@ def deploy_proxy(implementation: address) -> address:
     log NewProxy(proxy, implementation, block.timestamp)
 
     return proxy
+
+@external
+def deploy_multiple_proxies(implementation: address, n: uint256) -> DynArray[address, 27]:
+    # Creates and returns the proxy address
+    proxies: DynArray[address, 27] = []
+
+    for i: uint256 in range(n, bound=27):
+        proxies.append( extcall ISProxy(self).deploy_proxy(implementation))
+
+    log MultipleNewProxy(proxies, implementation, block.timestamp)
+
+    return proxies

@@ -94,18 +94,66 @@ def deploy_single_campaigns_with_many_proxies(ecosystem, network, provider, acco
     guards = GUARDS.split(",")
 
     single_campaign = account.deploy(project.SingleCampaign, guards, CRVUSD_ADDRESS, EXECUTE_REWARD_AMOUNT, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
-
+       
     click.echo(single_campaign)
 
     proxy = account.deploy(project.Proxy, max_priority_fee="10 wei", max_fee=max_fee, gas_limit="400000")
     click.echo(proxy)
 
-    for i in range(2):
+    single_campaign_contracts = []
+    
+    for i in range(25):
         proxy_campaign_address = proxy.deploy_proxy(single_campaign, max_priority_fee="10 wei", max_fee=max_fee, gas_limit="400000", sender=account)
         print(f"Campaign setup complete for campaign: {i} {proxy_campaign_address}")        
+        
+        single_campaign_contracts.append(proxy_campaign_address)
 
+        with open("single_campaign_contracts.log", "a+") as f:
+            f.write(f"Single Campaign: {single_campaign}\n")
+            f.write(f"Single Campaign Proxy: {proxy_campaign_address}\n")
+            f.write(f"Link: {blockexplorer}/address/{proxy_campaign_address}\n")
+            f.write(f"Single Campaign Contract List: {[str(contract) for contract in single_campaign_contracts]}\n")
+            f.write(f"{','.join(str(contract) for contract in single_campaign_contracts)}\n")
+            f.write("-" * 80 + "\n")
+
+        time.sleep(61)
+        
 cli.add_command(deploy_single_campaigns_with_many_proxies)
 
+
+@click.command(cls=ConnectedProviderCommand)
+@account_option()
+def deploy_single_campaigns_with_many_proxies_no_loop(ecosystem, network, provider, account):
+    account.set_autosign(True)
+
+    max_fee, blockexplorer = setup(ecosystem, network)
+
+    guards = GUARDS.split(",")
+
+    single_campaign = account.deploy(project.SingleCampaign, guards, CRVUSD_ADDRESS, EXECUTE_REWARD_AMOUNT, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
+       
+    click.echo(single_campaign)
+
+    proxy = account.deploy(project.Proxy, max_priority_fee="10 wei", max_fee=max_fee, gas_limit="400000")
+    click.echo(proxy)
+
+    single_campaign_contracts = []
+    n = 10
+
+    proxy_campaign_addresses = proxy.deploy_multiple_proxies(single_campaign, n, max_priority_fee="10 wei", max_fee=max_fee, gas_limit="400000", sender=account)
+    print(f"Campaign setup complete for campaign: {proxy_campaign_addresses}")        
+    
+    single_campaign_contracts.append(proxy_campaign_addresses)
+
+    with open("single_campaign_contracts.log", "a+") as f:
+        f.write(f"Single Campaign: {single_campaign}\n")
+        f.write(f"Single Campaign Proxy: {proxy_campaign_addresses}\n")
+        f.write(f"Link: {blockexplorer}/address/{proxy_campaign_addresses}\n")
+        f.write(f"Single Campaign Contract List: {[str(contract) for contract in proxy_campaign_addresses]}\n")
+        f.write(f"{','.join(str(contract) for contract in single_campaign_contracts)}\n")
+        f.write("-" * 80 + "\n")
+        
+cli.add_command(deploy_single_campaigns_with_many_proxies_no_loop)
 
 def setup(ecosystem, network):
 

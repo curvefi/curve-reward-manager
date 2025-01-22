@@ -511,3 +511,74 @@ def test_execute_with_crvusd(bob, charlie, distributor, single_campaign, test_ga
     single_campaign.execute(sender=charlie)
     assert crvusd_token.balanceOf(charlie) == initial_balance + execute_reward
     
+
+def test_deploy_single_proxy(bob, single_campaign, proxy):
+    """Test deploying a single proxy"""
+    implementation = single_campaign.address
+    
+    # Deploy proxy
+    proxy_address = proxy.deploy_proxy(implementation, sender=bob)
+    
+    # Verify proxy was created
+    assert proxy_address != implementation
+
+def test_deploy_multiple_proxies(bob, single_campaign, proxy):
+    """Test deploying multiple proxies"""
+    implementation = single_campaign.address
+    num_proxies = 10
+    
+    # Deploy proxies
+    tx = proxy.deploy_multiple_proxies(implementation, num_proxies, sender=bob)
+    proxy_addresses = tx.return_value
+    
+    # Verify correct number of proxies created
+    assert len(proxy_addresses) == num_proxies
+    
+    # Verify each proxy was created properly
+    for proxy_address in proxy_addresses:
+        assert proxy_address != implementation
+    
+def test_deploy_multiple_proxies_max_limit(bob, single_campaign, proxy):
+    """Test deploying maximum number of proxies (27)"""
+    implementation = single_campaign.address
+    num_proxies = 27
+    
+    # Deploy maximum number of proxies
+    tx = proxy.deploy_multiple_proxies(implementation, num_proxies, sender=bob)
+    proxy_addresses = tx.return_value
+    
+    print(tx)
+    print(proxy_addresses)
+    # Verify correct number of proxies created
+    assert len(proxy_addresses) == num_proxies
+
+def test_deploy_multiple_proxies_revert_over_limit(bob, single_campaign, proxy):
+    """Test deploying more than maximum allowed proxies reverts"""
+    implementation = single_campaign.address
+    num_proxies = 28  # Over the 27 limit
+    
+    # Attempt to deploy too many proxies
+    with ape.reverts():  # Should revert due to exceeding max bound
+        proxy.deploy_multiple_proxies(implementation, num_proxies, sender=bob)
+
+def test_recover_crvusd_token(bob, charlie, diana, crvusd_token, single_campaign):
+    amount = 10 ** 18
+    crvusd_token.transfer(single_campaign, amount, sender=charlie)
+    assert crvusd_token.balanceOf(single_campaign) == amount
+    # rest of lost token on charlies address, start with 10 ** 19
+    assert crvusd_token.balanceOf(charlie) == 9 * amount
+    # recover lost token to diana (recovery address)
+    single_campaign.recover_token(crvusd_token, bob, amount, sender=bob)
+    assert crvusd_token.balanceOf(bob) == amount
+
+def test_recover_token_revert_guard(alice, charlie, crvusd_token, single_campaign):
+    with ape.reverts("only reward guards can call this function"):
+        single_campaign.recover_token(crvusd_token, charlie, 10 ** 18, sender=alice)
+
+def test_recover_token_revert_amount(bob, charlie, crvusd_token, single_campaign):
+    with ape.reverts("amount must be greater than 0"):
+        single_campaign.recover_token(crvusd_token, charlie, 0,  sender=bob)
+
+def test_recover_token_revert_target_address(alice, bob, crvusd_token, single_campaign):
+    with ape.reverts("only guards allowed to receive token"):
+        single_campaign.recover_token(crvusd_token, alice, 10 ** 18, sender=bob)

@@ -237,6 +237,23 @@ def get_all_epochs() -> DynArray[uint256, 52]:
 
     return reward_epochs
 
+
+@external
+def recover_token(_token: address, target_address: address, _amount: uint256):
+    """
+    @notice recover wrong token from contract to recovery address
+    @param _token address of the token to recover
+    @param target_address address of the target to receive the token
+    @param _amount amount of the token to recover
+    """
+    assert msg.sender in self.guards, 'only reward guards can call this function'
+    assert target_address in self.guards, 'only guards allowed to receive token'
+
+    assert _amount > 0, 'amount must be greater than 0'
+
+    assert extcall IERC20(_token).transfer(target_address, _amount, default_return_value=True)
+
+
 @external
 @view
 def get_all_guards() -> DynArray[address, 3]:

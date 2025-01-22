@@ -6,6 +6,7 @@ def reward_token(project, alice, bob):
     reward_token = alice.deploy(project.TestToken)
     # mint token to bob
     reward_token.mint(bob, 10 ** 19, sender=alice)
+    reward_token.mint(bob, 10 ** 18, sender=alice)
     reward_token.approve(bob, 10 ** 19, sender=bob) 
     balance = reward_token.balanceOf(bob)
     print(balance)
@@ -53,5 +54,8 @@ def distributor(project, alice, bob, charlie, diana, reward_token, test_gauge, s
  
     return distributor_contract
 
-
-
+@pytest.fixture(scope="module")
+def proxy(project, alice):
+    # Deploy proxy contract
+    proxy_contract = alice.deploy(project.Proxy)
+    return proxy_contract
