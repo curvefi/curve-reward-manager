@@ -1,7 +1,7 @@
 # Reward Distribution System
 
 ## Overview
-This system consists of two main contracts (Distributor and SingleCampaign) designed for managing token rewards on L2 networks. Multiple campaigns can be run in series, with new deployments for each distribution period. Distributor can be run on its own without SingleCampaigns, but then transactions have to be executed manually on epoch end
+This system consists of two main contracts (Distributor and SingleCampaign) designed for managing token rewards on L2 networks. Multiple campaigns can be run in series, with new deployments for each distribution period. Distributor can be run on its own without SingleCampaigns, but then transactions have to be executed manually on every epoch
 
 ## Distributor Contract
 - Restricts `deposit_reward_token()` to a predefined set of gauge addresses specified at contract creation, if SingleCampaigns are used, the deployment address of the SingleCampaign needs to be added to the guard list during deployment of the Distributor
@@ -33,6 +33,16 @@ This system consists of two main contracts (Distributor and SingleCampaign) desi
 - One-time use per period (requires redeployment for new periods)
 - Zero-fund target: All funds should be distributed by period end
 
+## Definitions
+
+- campaign: a single distribution period for a single gauge
+- guards: addresses that can call `deposit_reward_token()` on the Distributor
+- epoch: time for one reward distribution on a single gauge, in seconds
+- reward_epochs: list of token amounts for each epoch for a single gauge
+- reward: payment for providing liquidity to a specific liquidity pool
+- gauge: this contract allows staked LP token to get rewared for the liquidiy they provide to a specific liquidity pool
+- LP token: token that represents a share of a liquidity pool
+- recovery_address: address on the Distributor to send back funds to a RecoveryAddress
 
 # Flowchart
 
