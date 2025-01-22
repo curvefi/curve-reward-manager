@@ -1,14 +1,37 @@
-# About
+# Reward Distribution System
 
-This Distributor allows to use deposit_reward_token() only on a preset of gauges provided on contract creation. 
+## Overview
+This system consists of two main contracts (Distributor and SingleCampaign) designed for managing token rewards on L2 networks. Multiple campaigns can be run in series, with new deployments for each distribution period. Distributor can be run on its own without SingleCampaigns, but then transactions have to be executed manually on epoch end
 
-The guard can decide on the time and on the size of the reward, but has no access to funds anytime.
+## Distributor Contract
+- Restricts `deposit_reward_token()` to a predefined set of gauge addresses specified at contract creation, if SingleCampaigns are used, the deployment address of the SingleCampaign needs to be added to the guard list during deployment of the Distributor
+- Guards can control timing and size of rewards but cannot directly access funds
+- If a RecoveryAddress is set, guards can recover funds only to this address
 
-If a RecoveryAddress is set, the guard can be used to send back funds to a RecoveryAddress
+## SingleCampaign Contract
+- Manages predefined reward epochs for a single gauge through the Distributor
+- Deplyoment addresses of SingleCampaign instances needs to be added to guard list during deployment of the Distributor. Because of this SingleCampaign have to be deployed before the Distributor.
+- Features:
+  - Pre-scheduled reward epochs with fixed amounts
+  - Public `distribute_reward()` function that anyone can call after an epoch ends
+  - Optional crvUSD incentive system (0.1 crvUSD paid to callers who trigger distributions)
 
-SingleCampaigns allows to set pre-defind reward epochs for on gauge over the Distributor.
+## Usage Lifecycle
+1. Deploy multiple SingleCampaign contracts for a specific distribution period
+2. Collect all SingleCampaign contract addresses
+3. Deploy Distributor with collected SingleCampaign addresses as guards
+4. For each SingleCampaign:
+   - Set Distributor address and receiving gauge
+   - Configure reward epochs
+5. Fund Distributor with reward tokens
+6. Anyone can call `distribute_reward()` to start distributions
+7. Contract becomes inactive after period ends
+8. No funds should remain in contracts after completion of a period
 
-SingleCampaigns can be loaded with crvUSD which then pays out 1 crvUSD on execution of one of the epochs.
+## Important Notes
+- L2-only implementation (Not gas efficient)
+- One-time use per period (requires redeployment for new periods)
+- Zero-fund target: All funds should be distributed by period end
 
 
 # Flowchart
@@ -84,16 +107,6 @@ pip install eth-ape'[recommended-plugins]'
 ape plugins install arbitrum
 ape test
 ```
-
-## With SingleCampaign
-
-1. Deploy many SingleCampaign contracts instances
-2. Collect all contract addresses from the deployments of the SingleCampaign contracts
-3. Add all contract addresses to the guards array of the Distributor
-4. Deploy the Distributor
-5. Set Distributor contract address and reward receiver address (gauge) for each SingleCampaign
-6. set desired reward epochs for each SingleCampaign
-7. if the Distributor has funds, call distribute_reward() can be called by anyone and the campaigne can be started 
 
 
 ## Passtrough 

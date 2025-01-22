@@ -124,7 +124,6 @@ def distribute_reward():
     """
     @notice Distribute rewards for the current epoch if conditions are met
     """
-    # assert msg.sender in self.guards, "only guards can call this function"
     assert self.is_setup_complete, "Setup not completed"
     assert self.is_reward_epochs_set, "Reward epochs not set"
     assert len(self.reward_epochs) > 0, "No remaining reward epochs"
