@@ -11,10 +11,6 @@ from ethereum.ercs import IERC20
 interface IDistributor:
     def send_reward_token(_receiving_gauge: address, _amount: uint256): nonpayable
 
-interface ISingleCampaign:
-    def execution_allowed() -> bool: view
-    def distribute_reward(): nonpayable
-
 # State Variables
 guards: public(DynArray[address, 3])  # Changed from owner to guards
 distributor_address: public(address)
@@ -118,9 +114,12 @@ def set_reward_epochs(_reward_epochs: DynArray[uint256, 52]):
 
     log RewardEpochsSet(_reward_epochs, block.timestamp)    
 
-
 @external
 def distribute_reward():
+    self._distribute_reward()
+
+@internal
+def _distribute_reward():
     """
     @notice Distribute rewards for the current epoch if conditions are met
     """
@@ -156,10 +155,10 @@ def execute():
     @dev no timestamp update needed as timestamp is updated in distribute_reward()
     """
     # Check if execution is allowed
-    assert staticcall ISingleCampaign(self).execution_allowed(), "Too early"
+    assert  self._execution_allowed(), "Too early"
 
     # Do the actual work here
-    extcall ISingleCampaign(self).distribute_reward()
+    self._distribute_reward()
     
     # Check if contract has enough crvUSD balance to pay reward
     # Pay crvUSD reward to caller
@@ -175,9 +174,15 @@ def execute():
         block.timestamp
     )
 
+
 @external
 @view
 def execution_allowed() -> bool:
+    return self._execution_allowed()
+
+@internal
+@view
+def _execution_allowed() -> bool:
     """
     @notice Check if execution is allowed
     @return bool True if execution is allowed, False otherwise

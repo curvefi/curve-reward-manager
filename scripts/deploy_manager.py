@@ -36,23 +36,26 @@ cli.add_command(info)
 
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
-def deploy(network, provider, account):
+def deploy(ecosystem, network, provider, account):
+    account.set_autosign(True)
+   
+    max_fee, blockexplorer = setup(ecosystem, network)
+
     """
     if EXISTING_TEST_GAUGE is None:
-        test_gauge = account.deploy(project.TestGauge, REWARD_TOKEN, RECOVERY_ADDRESS, max_priority_fee="1000 wei", max_fee="0.1 gwei", gas_limit="100000")
+        test_gauge = account.deploy(project.TestGauge, REWARD_TOKEN, RECOVERY_ADDRESS, max_priority_fee="100 wei", max_fee=max_fee, gas_limit="100000")
     else:
         test_gauge = EXISTING_TEST_GAUGE
 
     gauges.append(recovery_gauge)
     """
-    account.set_autosign(True)
-
+ 
     gauges = GAUGE_ALLOWLIST.split(",")
     click.echo(gauges)
     guards = GUARDS_AND_CAMPAIGNS.split(",")
     click.echo(guards)
 
-    deploy = account.deploy(project.Distributor, guards, REWARD_TOKEN, gauges, RECOVERY_ADDRESS, max_priority_fee="10 wei", max_fee="0.1 gwei", gas_limit="400000")
+    deploy = account.deploy(project.Distributor, guards, REWARD_TOKEN, gauges, RECOVERY_ADDRESS, max_priority_fee="10 wei", max_fee=max_fee, gas_limit="400000")
 
 cli.add_command(deploy)
 
@@ -86,7 +89,7 @@ cli.add_command(deploy_single_campaign)
 
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
-def deploy_single_campaigns_with_many_proxies(ecosystem, network, provider, account):
+def deploy_campaigns_with_many_proxies(ecosystem, network, provider, account):
     account.set_autosign(True)
 
     max_fee, blockexplorer = setup(ecosystem, network)
@@ -118,12 +121,12 @@ def deploy_single_campaigns_with_many_proxies(ecosystem, network, provider, acco
 
         time.sleep(61)
         
-cli.add_command(deploy_single_campaigns_with_many_proxies)
+cli.add_command(deploy_campaigns_with_many_proxies)
 
 
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
-def deploy_single_campaigns_with_many_proxies_no_loop(ecosystem, network, provider, account):
+def deploy_campaigns_with_many_proxies_no_loop(ecosystem, network, provider, account):
     account.set_autosign(True)
 
     max_fee, blockexplorer = setup(ecosystem, network)
@@ -138,7 +141,7 @@ def deploy_single_campaigns_with_many_proxies_no_loop(ecosystem, network, provid
     click.echo(proxy)
 
     single_campaign_contracts = []
-    n = 10
+    n = 20
 
     proxy_campaign_addresses = proxy.deploy_multiple_proxies(single_campaign, n, max_priority_fee="10 wei", max_fee=max_fee, gas_limit="400000", sender=account)
     print(f"Campaign setup complete for campaign: {proxy_campaign_addresses}")        
@@ -153,7 +156,7 @@ def deploy_single_campaigns_with_many_proxies_no_loop(ecosystem, network, provid
         f.write(f"{','.join(str(contract) for contract in single_campaign_contracts)}\n")
         f.write("-" * 80 + "\n")
         
-cli.add_command(deploy_single_campaigns_with_many_proxies_no_loop)
+cli.add_command(deploy_campaigns_with_many_proxies_no_loop)
 
 def setup(ecosystem, network):
 
@@ -162,7 +165,7 @@ def setup(ecosystem, network):
 
 
     if ecosystem.name == 'arbitrum':
-        max_fee = "10 gwei"
+        max_fee = "1 gwei"
         blockexplorer = "https://sepolia.arbiscan.io"
     elif ecosystem.name == 'taiko':
         max_fee = "0.1 gwei"
@@ -174,7 +177,7 @@ def setup(ecosystem, network):
 
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
-def deploy_many_single_campaigns(ecosystem, network, provider, account):
+def deploy_many_campaigns(ecosystem, network, provider, account):
     account.set_autosign(True)
 
     gauges = GAUGE_ALLOWLIST.split(",")
@@ -205,4 +208,4 @@ def deploy_many_single_campaigns(ecosystem, network, provider, account):
     click.echo(single_campaign_contracts)
     click.echo(single_campaign)
 
-cli.add_command(deploy_many_single_campaigns)
+cli.add_command(deploy_many_campaigns)
