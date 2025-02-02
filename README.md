@@ -1,4 +1,4 @@
-# Reward Distribution System
+# Automagic Reward Distribution 
 
 ## Overview
 This system consists of two main contracts (Distributor and SingleCampaign) designed for managing token rewards on L2 networks. Multiple campaigns can be run in series, with new deployments for each distribution period. Distributor can be run on its own without SingleCampaigns, but then transactions have to be executed manually on every epoch
