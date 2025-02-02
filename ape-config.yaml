@@ -10,6 +10,10 @@ plugins:
   
 default_ecosystem: ethereum
 
+taiko:
+  mainnet:
+    transaction_acceptance_timeout: 300
+
 ethereum:
   default_network: mainnet-fork
   mainnet:

@@ -180,22 +180,19 @@ def setup(ecosystem, network):
 def deploy_many_campaigns(ecosystem, network, provider, account):
     account.set_autosign(True)
 
-    gauges = GAUGE_ALLOWLIST.split(",")
     guards = GUARDS.split(",")
     single_campaign_contracts = []
 
-
     max_fee, blockexplorer = setup(ecosystem, network)
 
-    for gauge in gauges:
-        single_campaign = account.deploy(project.SingleCampaign, guards, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
-        
+    for i in range(20):
+        single_campaign = account.deploy(project.SingleCampaign, guards, CRVUSD_ADDRESS, EXECUTE_REWARD_AMOUNT, max_priority_fee="1000 wei", max_fee=max_fee, gas_limit="1000000")
+
         single_campaign_contracts.append(single_campaign)
 
         # Log contract address and transaction info
         with open("single_campaign_contracts.log", "a+") as f:
             f.write(f"Single Campaign Contract: {single_campaign.address}\n")
-            f.write(f"Deployed for gauge: {gauge}, but not yet set\n")
             f.write(f"Link: {blockexplorer}/address/{single_campaign.address}\n")
             f.write(f"Single Campaign Contract List: {[str(contract) for contract in single_campaign_contracts]}\n")
             f.write(f"{','.join(str(contract) for contract in single_campaign_contracts)}\n")

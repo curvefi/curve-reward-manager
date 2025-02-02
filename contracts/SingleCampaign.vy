@@ -12,7 +12,7 @@ interface IDistributor:
     def send_reward_token(_receiving_gauge: address, _amount: uint256): nonpayable
 
 # State Variables
-guards: public(DynArray[address, 3])  # Changed from owner to guards
+guards: public(DynArray[address, 5])  # Changed from owner to guards
 distributor_address: public(address)
 receiving_gauge: public(address)
 min_epoch_duration: public(uint256)
@@ -46,6 +46,9 @@ event RewardEpochsSet:
 
 event RewardDistributed:
     reward_amount: uint256
+    epoch_duration: uint256
+    end_time: uint256
+    end_time_buffer: uint256
     remaining_reward_epochs: uint256
     timestamp: uint256
 
@@ -59,7 +62,7 @@ event ExecuteRewardDistributed:
 
 
 @deploy
-def __init__(_guards: DynArray[address, 3], _crvusd_address: address, _execute_reward_amount: uint256):
+def __init__(_guards: DynArray[address, 5], _crvusd_address: address, _execute_reward_amount: uint256):
     """
     @notice Initialize the contract with guards
     @param _guards List of guard addresses that can control the contract
@@ -127,14 +130,26 @@ def _distribute_reward():
     assert self.is_reward_epochs_set, "Reward epochs not set"
     assert len(self.reward_epochs) > 0, "No remaining reward epochs"
 
-    # Check if minimum time has passed since last distribution if not first distribution
+    end_time: uint256 = 0
+    end_time_buffer: uint256 = 0
+
+    # For subsequent distributions, check if minimum time has passed
+    # @dev the DISTRIBUTION_BUFFER allows to distribute the reward earlier than the min_epoch_duration, to allow continuous distribution
     if self.have_rewards_started:
-        assert block.timestamp >= self.last_reward_distribution_time + self.min_epoch_duration - DISTRIBUTION_BUFFER, "Minimum time between distributions not met"
+        end_time = self.last_reward_distribution_time + self.min_epoch_duration
+        end_time_buffer = end_time - DISTRIBUTION_BUFFER
+        assert block.timestamp >= end_time_buffer, "Minimum time between distributions not met"
     
     reward_amount: uint256 = self.reward_epochs.pop()
     
     # Update last distribution time and mark rewards as started
     self.last_reward_distribution_time = block.timestamp
+
+    # Calculate end_time for logging purposes only for subsequent distributions
+    if (not self.have_rewards_started):
+        end_time = self.last_reward_distribution_time + self.min_epoch_duration
+        end_time_buffer = end_time - DISTRIBUTION_BUFFER
+
     self.have_rewards_started = True
     
     # Call reward guard to send reward
@@ -142,8 +157,12 @@ def _distribute_reward():
 
     self.last_reward_amount = reward_amount
     
+
     log RewardDistributed(
         reward_amount,
+        self.min_epoch_duration,
+        end_time,
+        end_time_buffer,
         len(self.reward_epochs),  # Remaining reward epochs
         block.timestamp
     )
@@ -260,7 +279,7 @@ def recover_token(_token: address, target_address: address, _amount: uint256):
 
 @external
 @view
-def get_all_guards() -> DynArray[address, 3]:
+def get_all_guards() -> DynArray[address, 5]:
     """
     @notice Get all guards
     @return DynArray[address, 3] Array containing all guards
