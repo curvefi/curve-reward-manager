@@ -47,6 +47,9 @@ setup_op_campaign:
 setup_taiko_campaign:
 	ape run scripts/campaign_manager.py setup-taiko-campaign --network taiko:mainnet:node
 
+rune_next_taiko_epoch:
+	ape run scripts/campaign_manager.py run-next-taiko --network taiko:mainnet:node
+
 import_pvk:
 	ape accounts import arbideploy
 
@@ -59,3 +62,4 @@ noisy_test:
 test:
 	ape test --network ethereum:local:test
 
+ape run scripts/campaign_manager.py run-next-taiko --network taiko:mainnet:node

@@ -21,7 +21,6 @@ DRY_RUN = os.getenv('DRY_RUN')
 CAMPAIGN_CONTRACT_LIST = os.getenv('CAMPAIGN_CONTRACT_LIST')
 
 
-
 @click.group()
 def cli():
     pass
@@ -445,7 +444,8 @@ cli.add_command(set_reward_epochs)
 
 @click.command(cls=ConnectedProviderCommand)
 @account_option()
-def query_next_epoch_info(account):
+def run_next_taiko(account):
+    # on taiko
 
     campaign_address = ["0xb74370F716f1D552684c98a8b4DDF9859960386c",
     "0x9cCd30A992EC6775ad4B95fc267e7Fd28d7f52A9", 
@@ -455,21 +455,30 @@ def query_next_epoch_info(account):
     "0xfdb6a782aAa9254fAb82eE39b3fd7728C8442f0D",
     "0x9511623fB1C793B875B490FC331df503108E9313"]
 
-
     for address in campaign_address:
         single_campaign = project.SingleCampaign.at(address)
         next_epoch_info = single_campaign.get_next_epoch_info()
-        print(f"next_epoch_info: {next_epoch_info}")
-        print(f"next_epoch_info[1]: {next_epoch_info[1]}")
+        DISTRIBUTION_BUFFER = single_campaign.DISTRIBUTION_BUFFER()
+        print(f"DISTRIBUTION_BUFFER: {DISTRIBUTION_BUFFER}")
+        print(f"next run in days: {next_epoch_info[1]/60/60/24}")
+        print(f"next run in hours: {next_epoch_info[1]/60/60}")
+        print(f"next run in seconds: {next_epoch_info[1]}")
+        print(f"amount: {next_epoch_info[0]}")
+        print(f"amount with decimals: {next_epoch_info[0]/10**18}")
+        print(f"execution_allowed: {single_campaign.execution_allowed()}")
+        # print(f"execution_allowed_time: {single_campaign.execution_allowed_time()}")
+        # print(f"execution_allowed_time_buffer: {single_campaign.execution_allowed_time_buffer()}")
+        if next_epoch_info[1]  < DISTRIBUTION_BUFFER:
+            if single_campaign.execution_allowed():
+                print(f"Next epoch info is less than 2 days for campaign: {address}")
+                distribute_reward = single_campaign.distribute_reward(sender=account)
+                print(f"distribute_reward: {distribute_reward}")    
+                next_epoch_info = single_campaign.get_next_epoch_info()
+                print(f"next_epoch_info: {next_epoch_info}")
+        else:
+            print(f"Nothing executed for campaign, to early or outside of buffer time")
 
-        if next_epoch_info[1]  < 2*24*60*60:
-            print(f"Next epoch info is less than 2 days for campaign: {address}")
-            distribute_reward = single_campaign.distribute_reward(sender=account)
-            print(f"distribute_reward: {distribute_reward}")    
-            next_epoch_info = single_campaign.get_next_epoch_info()
-            print(f"next_epoch_info: {next_epoch_info}")
-
-cli.add_command(query_next_epoch_info)
+cli.add_command(run_next_taiko)
 
 
 def setup(ecosystem, network):
