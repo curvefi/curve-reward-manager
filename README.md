@@ -1,7 +1,7 @@
 # Automagic Reward Distribution 
 
 ## Overview
-This system consists of two main contracts (Distributor and SingleCampaign) designed for managing token rewards on L2 networks. Multiple campaigns can be run in series, with new deployments for each distribution period. Distributor can be run on its own without SingleCampaigns, but then transactions have to be executed manually on every epoch
+This system consists of two main contracts (Distributor and SingleCampaign) designed for managing liquidty incentives on L2 networks. Multiple campaigns can be run in series, with new deployments for each distribution period. Distributor can be run on its own without SingleCampaigns, but then transactions have to be executed manually on every epoch
 
 ## Distributor Contract
 - Restricts `deposit_reward_token()` to a predefined set of gauge addresses specified at contract creation, if SingleCampaigns are used, the deployment address of the SingleCampaign needs to be added to the guard list during deployment of the Distributor
@@ -43,6 +43,8 @@ This system consists of two main contracts (Distributor and SingleCampaign) desi
 - gauge: this contract allows staked LP token to get rewared for the liquidiy they provide to a specific liquidity pool
 - LP token: token that represents a share of a liquidity pool
 - recovery_address: address on the Distributor to send back funds to a RecoveryAddress
+- name: a human readable name for a campaign
+- id: a unique identifier for a campaign
 
 # Flowchart
 

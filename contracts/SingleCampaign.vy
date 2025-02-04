@@ -16,6 +16,8 @@ guards: public(DynArray[address, 5])  # Changed from owner to guards
 distributor_address: public(address)
 receiving_gauge: public(address)
 min_epoch_duration: public(uint256)
+id: public(uint256)
+name: public(String[64])
 
 is_setup_complete: public(bool)
 is_reward_epochs_set: public(bool)
@@ -76,7 +78,7 @@ def __init__(_guards: DynArray[address, 5], _crvusd_address: address, _execute_r
     self.execute_reward_amount = _execute_reward_amount
 
 @external
-def setup(_distributor_address: address, _receiving_gauge: address, _min_epoch_duration: uint256):
+def setup(_distributor_address: address, _receiving_gauge: address, _min_epoch_duration: uint256, _id: uint256, _name: String[64]):
     """
     @notice Set the reward guard and receiver addresses (can only be set once)
     @param _distributor_address Address of the Distributor contract
@@ -90,6 +92,8 @@ def setup(_distributor_address: address, _receiving_gauge: address, _min_epoch_d
     self.distributor_address = _distributor_address
     self.receiving_gauge = _receiving_gauge
     self.min_epoch_duration = _min_epoch_duration
+    self.id = _id
+    self.name = _name
 
     self.is_setup_complete = True
 
@@ -199,6 +203,7 @@ def execute():
 def execution_allowed() -> bool:
     return self._execution_allowed()
 
+
 @internal
 @view
 def _execution_allowed() -> bool:
@@ -219,6 +224,37 @@ def _execution_allowed() -> bool:
         return True
     else: 
         return False
+
+@external
+@view
+def next_execution_allowed_time() -> uint256:
+    """
+    @notice Get the time when execution is allowed
+    @return uint256 timestamp when execution is allowed
+    """
+    return self.last_reward_distribution_time + self.min_epoch_duration
+
+@external
+@view
+def next_execution_allowed_time_buffer() -> uint256:
+    """
+    @notice Get the time when execution is allowed
+    @return uint256 timestamp when earliest execution is allowed
+    """
+    return self.last_reward_distribution_time + self.min_epoch_duration - DISTRIBUTION_BUFFER
+
+@external
+@view
+def next_execution_payment_amount() -> uint256:
+    """
+    @notice Get the amount of crvUSD that will be paid to the caller when execution is allowed
+    @return uint256 amount of crvUSD that will be paid to the caller
+    """
+    if staticcall IERC20(self.crvusd_address).balanceOf(self) >= self.execute_reward_amount:
+        return self.execute_reward_amount
+    else:
+        return 0
+
 
 @external
 @view

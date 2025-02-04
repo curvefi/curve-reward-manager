@@ -21,6 +21,7 @@ guards: public(DynArray[address, 30])
 reward_token: public(address)
 receiving_gauges: public(DynArray[address, 20])
 recovery_address: public(address)
+campaign_addresses: public(DynArray[address, 30])
 
 event SentRewardToken:
     receiving_gauge: address
@@ -56,6 +57,9 @@ def send_reward_token(_receiving_gauge: address, _amount: uint256, _epoch: uint2
     assert _receiving_gauge in self.receiving_gauges, 'only reward receiver which are allowed'
     assert 3 * WEEK // 7 <= _epoch and _epoch <= WEEK * 4 * 12, 'epoch duration must be between 3 days and a year'
     assert extcall IERC20(self.reward_token).approve(_receiving_gauge, _amount, default_return_value=True)
+
+    self.campaign_addresses.append(msg.sender)
+
     # legacy gauges have no epoch parameter 
     # new deposit_reward_token has epoch parameter default to WEEK
     if _epoch == WEEK:
@@ -64,6 +68,23 @@ def send_reward_token(_receiving_gauge: address, _amount: uint256, _epoch: uint2
        extcall Gauge(_receiving_gauge).deposit_reward_token(self.reward_token, _amount, _epoch)
 
     log SentRewardToken(_receiving_gauge, self.reward_token, _amount, _epoch, block.timestamp)
+
+
+@external
+def remove_campaign_address(_campaign_address: address):
+    """
+    @notice Remove a campaign address from the list
+    @param _campaign_address The address of the campaign to remove
+    """
+    assert msg.sender in self.guards, 'only reward guards can call this function'
+    
+    for i: uint256 in range(len(self.campaign_addresses), bound=30):
+         # Move the last element to the found i and pop the last element
+        if self.campaign_addresses[i] == _campaign_address:    
+            last_idx: uint256 = len(self.campaign_addresses) - 1
+            if i != last_idx:
+                self.campaign_addresses[i] = self.campaign_addresses[last_idx]
+            self.campaign_addresses.pop()
 
 @external
 def recover_token(_token: address, _amount: uint256):
@@ -93,3 +114,12 @@ def get_all_receiving_gauges() -> DynArray[address, 20]:
     @return DynArray[address, 20] list containing all reward receivers
     """
     return self.receiving_gauges
+
+@external
+@view
+def get_all_campaign_addresses() -> DynArray[address, 30]:
+    """
+    @notice Get all campaign addresses
+    @return DynArray[address, 20] list containing all campaign addresses
+    """
+    return self.campaign_addresses
